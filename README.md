@@ -1,25 +1,31 @@
-# SecureMailScope
+# 🛡️ Secure SMTP
 
-**AI-Assisted Cryptographic Security Posture Assessment for Secure Email Communications**
+**Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution for SMTP, IMAP & POP3**
 
-SecureMailScope is a passive network forensic tool that ingests PCAP files containing SMTP, IMAP, and POP3 traffic and automatically assesses the cryptographic security posture of the email infrastructure — without ever decrypting message content.
+Secure SMTP is an enterprise-grade passive network forensic and posture assessment platform. It ingests network packet capture (PCAP) files containing email traffic and automatically assesses the cryptographic security posture of the mail infrastructure — without ever decrypting message content or violating privacy.
 
-## 🔒 What It Does
+---
 
-1. **Reconstructs** email protocol sessions from raw packet captures
-2. **Parses** TLS handshakes, cipher suites, and X.509 certificate chains
-3. **Evaluates** crypto posture against a declarative YAML rule engine
-4. **Scores** risk using AI (XGBoost + SHAP explainability) and detects anomalies (Isolation Forest)
-5. **Reports** findings through an interactive dashboard and exportable reports (JSON/PDF/HTML)
+## 🔒 Core Capabilities
+
+1. **Passive Reconstruction**: Reassembles bi-directional TCP sessions from raw packet captures (SMTP, IMAP, POP3) without decrypting payloads.
+2. **Cryptographic Deep Inspection**: Parses TLS ClientHello / ServerHello handshakes, cipher suites, key exchange methods, and full X.509 certificate chains. Computes **JA3, JA3S, JA4, and JA4S** fingerprints.
+3. **Declarative Rule Engine**: Evaluates sessions against a YAML rulebook mapped to **NIST SP 800-52r2**, **PCI-DSS v4.0**, and **RFC 8996**.
+4. **Explainable AI Risk Scoring & Anomaly Detection**: Calculates rule-weighted risk scores (0–100) with **SHAP feature attribution** and detects statistical cryptographic anomalies using **Isolation Forest**.
+5. **MongoDB Document Storage**: High-performance persistence for deep nested session dossiers, certificates, and compliance findings.
+6. **Executive Reporting**: Generates instant boardroom-ready audit reports in **PDF, HTML, and JSON**.
+
+---
 
 ## ⚡ Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
+- MongoDB (running locally on `localhost:27017`)
 - pip
 
-### Setup & Quick Run (1-Command Launch)
+### 1-Command Launch
 
 ```bash
 # Clone or enter the project directory
@@ -29,7 +35,7 @@ cd "Secure HTTP"
 ./start_demo.sh
 ```
 
-### Manual Setup (Alternative)
+### Manual Setup
 
 ```bash
 # Create virtual environment and install dependencies
@@ -38,97 +44,82 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 
 # Start the API backend
-uvicorn securemailscope.api.main:app --reload --port 8000
+PYTHONPATH=src uvicorn securemailscope.api.main:app --reload --port 8000
 
-# In another terminal, start the dashboard
+# In another terminal, start the Streamlit dashboard
 source .venv/bin/activate
-streamlit run dashboard/app.py
+PYTHONPATH=src streamlit run dashboard/app.py
 ```
 
-Then open `http://localhost:8501` in your browser.
+Open `http://localhost:8501` to access the Secure SMTP Security Operations Console.
 
-### Usage
+---
 
-1. **Upload** a `.pcap` or `.pcapng` file through the dashboard
-2. Wait for analysis to complete (typically seconds for small PCAPs)
-3. Navigate to **Fleet Overview** to see host-level risk scores
-4. Click into **Session Explorer** to drill into individual sessions
-5. **Export** reports as JSON, PDF, or HTML
-
-## 🏗️ Architecture
-
-Six-stage pipeline:
+## 🏗️ Technical Architecture
 
 ```
-[PCAP Ingest] → [Protocol/STARTTLS ID] → [TLS Handshake + Cert Parsing]
-                                            ↓
-[Rule Engine] → [AI Risk Scoring + Anomaly Detection] → [Reports + Dashboard]
+[ PCAP Ingest ] → [ Protocol / STARTTLS Identification ] → [ TLS Handshake & Cert Parsing ]
+                                                                      ↓
+[ Rule Engine ] → [ Explainable AI Risk Scoring + Isolation Forest ] → [ MongoDB + Dashboard + Reports ]
 ```
-
-**Stages 1–3** (Forensic Reconstruction): Deterministic, must be exactly correct.
-**Stages 4–6** (Intelligence Layer): Sits on top of stage 1–3 facts, never replaces them.
 
 ### Tech Stack
 
-| Component | Technology |
-|---|---|
-| PCAP Parsing | scapy |
-| TLS/Cert Parsing | cryptography |
-| Rule Engine | YAML + safe Python evaluator |
-| ML Scoring | XGBoost + scikit-learn + SHAP |
-| Anomaly Detection | Isolation Forest |
-| API | FastAPI |
-| Dashboard | Streamlit + Plotly |
-| Reports | Jinja2 + WeasyPrint |
-| Database | SQLite (SQLModel) |
+| Component | Technology | Description |
+|---|---|---|
+| **Packet Parsing** | Scapy | Reassembles bi-directional TCP streams |
+| **TLS & Certificates** | `cryptography` (X.509) | Key lengths, signature algorithms, chain validation |
+| **Fingerprinting** | JA3, JA3S, JA4, JA4S | Client and server cryptographic fingerprinting |
+| **Rule Engine** | YAML + Safe Evaluator | Mapped to NIST SP 800-52r2, PCI-DSS v4.0 |
+| **AI / ML** | scikit-learn + SHAP | Isolation Forest anomaly detection & SHAP attributions |
+| **Database** | MongoDB (PyMongo) | Document-oriented persistence |
+| **API Backend** | FastAPI + Uvicorn | Async REST endpoints |
+| **Dashboard** | Streamlit + Plotly | Glassmorphic dark-mode SOC console |
+| **Reporting** | WeasyPrint + Jinja2 | Exportable PDF, HTML, and JSON audit dossiers |
+
+---
 
 ## 📁 Project Structure
 
 ```
 src/securemailscope/
-├── ingest/         # PCAP reading, TCP reassembly, protocol detection
-├── tls/            # TLS handshake parsing, certificate extraction, fingerprinting
+├── ingest/         # PCAP reading, TCP stream reassembly, protocol detection
+├── tls/            # TLS handshake parsing, certificate extraction, JA3/JA4 fingerprinting
 ├── rules/          # YAML-driven crypto weakness rule engine
-├── ai/             # Risk scoring, anomaly detection, SHAP explanations
+├── ai/             # Risk scoring, Isolation Forest anomaly detection, SHAP explanations
+├── db/             # MongoDB connection manager and Pydantic v2 document models
 ├── reporting/      # JSON, HTML, PDF report generation
-├── api/            # FastAPI application
-└── db/             # SQLModel database models
-dashboard/          # Streamlit dashboard
-tests/              # Test suite
+└── api/            # FastAPI REST endpoints
+dashboard/          # Streamlit SOC dashboard
+scripts/            # PCAP generators and MongoDB demo data seeders
+tests/              # Comprehensive test suite (120 unit tests)
 ```
 
-## 🔍 Rule Engine
-
-Rules are defined in [`src/securemailscope/rules/ruleset.yaml`](src/securemailscope/rules/ruleset.yaml). Add new rules without code changes:
-
-```yaml
-- id: your-rule-id
-  applies_to: handshake.tls_version_negotiated
-  condition: "value in ['SSLv3']"
-  severity: critical
-  message: "SSLv3 detected: {value}"
-  recommendation: "Upgrade to TLS 1.2+"
-```
+---
 
 ## 📊 API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/analyze` | Upload PCAP for analysis |
-| GET | `/api/analyze/{job_id}/status` | Check analysis progress |
-| GET | `/api/hosts` | List all hosts with risk scores |
-| GET | `/api/hosts/{id}` | Host detail + sessions |
-| GET | `/api/sessions/{id}` | Full session detail |
-| GET | `/api/sessions/{id}/explain` | SHAP explanation |
-| GET | `/api/reports/{job_id}.json` | JSON report |
-| GET | `/api/reports/{job_id}.pdf` | PDF report |
-| GET | `/api/reports/{job_id}.html` | HTML report |
+| `POST` | `/api/analyze` | Upload PCAP file for real-time analysis |
+| `GET` | `/api/analyze/{job_id}/status` | Check analysis status |
+| `GET` | `/api/hosts` | List all hosts with aggregate risk scores |
+| `GET` | `/api/hosts/{id}` | Host detail + associated session streams |
+| `GET` | `/api/sessions/{id}` | Full deep session telemetry document |
+| `GET` | `/api/sessions/{id}/explain` | SHAP feature attribution breakdown |
+| `GET` | `/api/reports/{job_id}.json` | Download JSON audit report |
+| `GET` | `/api/reports/{job_id}.pdf` | Download PDF audit report |
+| `GET` | `/api/reports/{job_id}.html` | Download HTML audit report |
+
+---
 
 ## 📋 Documentation
 
-- [`01_PRD.md`](01_PRD.md) — Product Requirements
-- [`02_TAD.md`](02_TAD.md) — Technical Architecture
-- [`03_IMPLEMENTATION_PLAN.md`](03_IMPLEMENTATION_PLAN.md) — Build Phases
+- [`01_PRD.md`](01_PRD.md) — Product Requirements Document
+- [`02_TAD.md`](02_TAD.md) — Technical Architecture Document
+- [`DEMO_GUIDE.md`](DEMO_GUIDE.md) — Live Pitch & Demonstration Guide
+
+---
 
 ## License
 

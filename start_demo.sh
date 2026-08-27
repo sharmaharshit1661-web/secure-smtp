@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# SecureMailScope — Demo & Presentation Launcher
+# Secure SMTP — Demo & Presentation Launcher
 # ==============================================================================
 # Launches both the FastAPI backend and Streamlit dashboard with 1 command.
 # Seeds sample data if needed.
@@ -12,7 +12,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "======================================================================"
-echo "🔒 SecureMailScope — Cryptographic Security Posture Assessment"
+echo "🛡️ Secure SMTP — Cryptographic Security Posture Assessment"
 echo "======================================================================"
 
 # 1. Activate Virtual Environment
@@ -27,8 +27,8 @@ else
 fi
 
 # 2. Check/Generate Test PCAPs & Seed Demo Data
-echo "✓ Checking demo database..."
-python scripts/seed_demo_data.py
+echo "✓ Checking demo database (MongoDB)..."
+PYTHONPATH=src python scripts/seed_demo_data.py
 
 # 3. Clean up existing processes on ports 8000 and 8501 if any
 echo "✓ Checking ports..."
@@ -37,7 +37,7 @@ lsof -ti:8501 | xargs kill -9 2>/dev/null || true
 
 # 4. Start FastAPI Backend
 echo "✓ Starting FastAPI backend on http://localhost:8000..."
-uvicorn securemailscope.api.main:app --host 0.0.0.0 --port 8000 --log-level warning &
+PYTHONPATH=src uvicorn securemailscope.api.main:app --host 0.0.0.0 --port 8000 --log-level warning &
 BACKEND_PID=$!
 
 # Wait for backend to be ready
@@ -51,13 +51,13 @@ done
 
 # 5. Start Streamlit Dashboard
 echo "✓ Starting Streamlit dashboard on http://localhost:8501..."
-streamlit run dashboard/app.py --server.port 8501 --server.headless false &
+PYTHONPATH=src streamlit run dashboard/app.py --server.port 8501 --server.headless false &
 FRONTEND_PID=$!
 
 # 6. Presentation Ready Banner
 echo ""
 echo "======================================================================"
-echo "🚀 SecureMailScope is LIVE and ready for presentation!"
+echo "🚀 Secure SMTP is LIVE and ready for presentation!"
 echo "======================================================================"
 echo "  🌐 Streamlit Dashboard:  http://localhost:8501"
 echo "  📡 FastAPI Backend:      http://localhost:8000"

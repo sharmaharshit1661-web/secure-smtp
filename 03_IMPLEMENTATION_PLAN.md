@@ -1,4 +1,4 @@
-# Implementation Plan — SecureMailScope
+# Implementation Plan — Secure SMTP
 
 **Read `01_PRD.md` and `02_TAD.md` first — this doc assumes both.**
 **Instructions for the build agent:** work through phases in order. Do not start a phase's code until the previous phase's acceptance criteria are met — the AI layer (Phase 3) is only trustworthy if Phases 1–2 are correct. Check off each item as completed. If a decision point comes up that isn't covered by the PRD/TAD, make the most reasonable choice, note it in a `DECISIONS.md` file with a one-line rationale, and continue — don't stop to ask unless it's a genuine ambiguity that changes scope.

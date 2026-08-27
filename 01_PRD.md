@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
-## SecureMailScope — AI-Assisted Cryptographic Security Posture Assessment for Secure Email Communications
+## Secure SMTP — Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution for SMTP, IMAP & POP3
 
-**Doc status:** Draft for build handoff
+**Doc status:** Active
 **Owner:** Harshit Sharma
 **Companion docs:** `02_TAD.md` (technical architecture), `03_IMPLEMENTATION_PLAN.md` (phased build checklist)
 
@@ -9,7 +9,7 @@
 
 ## 1. Summary
 
-SecureMailScope is a passive, AI-assisted network forensic tool that ingests PCAP files containing SMTP, IMAP, and POP3 traffic and automatically assesses the cryptographic security posture of the email infrastructure involved — without ever decrypting message content. It reconstructs sessions, parses TLS handshakes and certificates, evaluates them against a crypto weakness rulebook, layers AI-based risk scoring and anomaly detection on top, and outputs prioritized findings through a dashboard and exportable reports (JSON/PDF/HTML).
+Secure SMTP is a passive, AI-assisted network forensic tool that ingests PCAP files containing SMTP, IMAP, and POP3 traffic and automatically assesses the cryptographic security posture of the email infrastructure involved — without ever decrypting message content. It reconstructs sessions, parses TLS handshakes and certificates, evaluates them against a crypto weakness rulebook, layers AI-based risk scoring and anomaly detection on top, and outputs prioritized findings through a dashboard and exportable reports (JSON/PDF/HTML).
 
 ## 2. Problem statement
 

@@ -1,5 +1,5 @@
 # Technical Architecture Document (TAD)
-## SecureMailScope
+## Secure SMTP — Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution
 
 **Companion docs:** `01_PRD.md` (requirements this satisfies), `03_IMPLEMENTATION_PLAN.md` (build order)
 **Audience:** whoever/whatever (including an AI coding agent) implements this system. Every section is written to be directly actionable — concrete libraries, concrete schemas, concrete file layout.

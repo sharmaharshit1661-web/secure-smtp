@@ -79,9 +79,9 @@ def _generate_pdf_reportlab(output_path: Path, data: dict[str, Any]) -> None:
     story = []
 
     # Title & Metadata
-    story.append(Paragraph("🔒 SecureMailScope — Security Assessment Report", title_style))
+    story.append(Paragraph("🛡️ Secure SMTP — Security Assessment Report", title_style))
     gen_time = data.get("generated_at", "N/A")
-    story.append(Paragraph(f"Generated at: {gen_time} | AI-Assisted Cryptographic Security Posture", subtitle_style))
+    story.append(Paragraph(f"Generated at: {gen_time} | Passive Cryptographic Posture Intelligence", subtitle_style))
     story.append(Spacer(1, 8))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#cbd5e1"), spaceAfter=12))
 
@@ -179,7 +179,7 @@ def _generate_pdf_reportlab(output_path: Path, data: dict[str, Any]) -> None:
     # Footer
     story.append(Spacer(1, 15))
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#cbd5e1"), spaceAfter=6))
-    story.append(Paragraph("SecureMailScope Automated Posture Assessment — Generated for Security Evaluation", subtitle_style))
+    story.append(Paragraph("Secure SMTP Automated Posture Assessment — Generated for Security Evaluation", subtitle_style))
 
     doc.build(story)
     logger.info("Generated PDF report using ReportLab: %s", output_path)
@@ -243,11 +243,11 @@ def generate_pdf_report(
         doc = SimpleDocTemplate(str(output), pagesize=letter)
         styles = getSampleStyleSheet()
         doc.build([
-            Paragraph("SecureMailScope Assessment Report", styles["Heading1"]),
+            Paragraph("Secure SMTP Assessment Report", styles["Heading1"]),
             Paragraph("Please refer to the accompanying HTML and JSON reports.", styles["Normal"]),
         ])
     except Exception:
         with open(output, "wb") as f:
-            f.write(b"%PDF-1.4\n% SecureMailScope Report Placeholder\n%%EOF")
+            f.write(b"%PDF-1.4\n% Secure SMTP Report Placeholder\n%%EOF")
 
     return str(output)

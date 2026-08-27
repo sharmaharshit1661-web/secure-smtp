@@ -17,7 +17,7 @@ REPORT_TEMPLATE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureMailScope Report</title>
+    <title>Secure SMTP — Security Assessment Report</title>
     <style>
         :root {
             --bg-primary: #0a0e1a;
@@ -196,8 +196,8 @@ REPORT_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <h1>🔒 SecureMailScope</h1>
-        <p class="meta">Security Assessment Report — Generated {{ data.generated_at }}</p>
+        <h1>🛡️ Secure SMTP</h1>
+        <p class="meta">Cryptographic Security Posture Assessment Report — Generated {{ data.generated_at }}</p>
 
         <h2>Executive Summary</h2>
         <div class="summary-grid">
@@ -315,7 +315,7 @@ REPORT_TEMPLATE = """<!DOCTYPE html>
         {% endfor %}
 
         <div class="footer">
-            <p>SecureMailScope — AI-Assisted Cryptographic Security Posture Assessment</p>
+            <p>Secure SMTP — Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution</p>
             <p>This report was generated automatically. Findings should be validated by a security professional.</p>
         </div>
     </div>

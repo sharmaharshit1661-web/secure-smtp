@@ -1,4 +1,4 @@
-# SecureMailScope Crypto Weakness Ruleset
+# Secure SMTP Crypto Weakness Ruleset
 # =========================================
 # Declarative rules evaluated by rules/engine.py against Session/TLSHandshake/Certificate data.
 # Each rule fires a Finding when its condition is true.
