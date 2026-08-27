@@ -1,4 +1,4 @@
-# 🔒 SecureMailScope — Judge Presentation & Demo Guide
+# 🔒 Secure SMTP — Judge Presentation & Demo Guide
 
 > **AI-Assisted Cryptographic Security Posture Assessment for Secure Email Communications**
 
@@ -12,7 +12,7 @@ Email protocols (**SMTP, IMAP, POP3**) secure the majority of enterprise communi
 - **Certificate Hygiene Gaps**: Expired certificates, weak signature algorithms (SHA-1/MD5), insufficient RSA key lengths (<2048-bit), or self-signed certs in production.
 - **TLS 1.3 Inspection Challenges**: TLS 1.3 encrypts certificates post-ServerHello; systems must gracefully handle limited visibility while inspecting ClientHello/ServerHello negotiations and extensions.
 
-**SecureMailScope** solves this by providing passive, forensic PCAP-based security posture analysis, extracting cryptographic facts, evaluating declarative security rules, computing explainable AI risk scores with SHAP attribution, and flagging protocol anomalies via Isolation Forests.
+**Secure SMTP** solves this by providing passive, forensic PCAP-based security posture analysis, extracting cryptographic facts, evaluating declarative security rules, computing explainable AI risk scores with SHAP attribution, and flagging protocol anomalies via Isolation Forests.
 
 ---
 
