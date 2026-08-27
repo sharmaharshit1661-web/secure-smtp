@@ -1,8 +1,8 @@
-# SecureMailScope
+# Secure SMTP
 
 **AI-Assisted Cryptographic Security Posture Assessment for Secure Email Communications**
 
-SecureMailScope is a passive network forensic tool that ingests PCAP files containing SMTP, IMAP, and POP3 traffic and automatically assesses the cryptographic security posture of the email infrastructure — without ever decrypting message content.
+Secure SMTP is a passive network forensic tool that ingests PCAP files containing SMTP, IMAP, and POP3 traffic and automatically assesses the cryptographic security posture of the email infrastructure — without ever decrypting message content.
 
 ## 🔒 What It Does
 
