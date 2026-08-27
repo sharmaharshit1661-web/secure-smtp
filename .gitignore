@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Agent caches / Local temp configs
+.claude/
+.codex/
+.cursor/
+.impeccable/
+
+# Database files & uploads
+*.db
+*.sqlite
+*.sqlite3
+/tmp/securemailscope_*
+
+# Build / Egg metadata
+build/
+dist/
+*.egg-info/

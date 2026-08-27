@@ -1,0 +1,100 @@
+# SecureMailScope Crypto Weakness Ruleset
+# =========================================
+# Declarative rules evaluated by rules/engine.py against Session/TLSHandshake/Certificate data.
+# Each rule fires a Finding when its condition is true.
+# Satisfies FR-10 / NFR-5 (extensible without code changes).
+
+# ── TLS Version Rules ──
+
+- id: deprecated-tls-version
+  applies_to: handshake.tls_version_negotiated
+  condition: "value in ['SSLv3', 'TLS1.0', 'TLS1.1']"
+  severity: high
+  message: "Deprecated TLS version negotiated: {value}"
+  recommendation: "Disable {value} on the server; require TLS 1.2 minimum, prefer TLS 1.3."
+
+# ── Cipher Suite Rules ──
+
+- id: weak-cipher
+  applies_to: handshake.cipher_suite_negotiated
+  condition: "is_weak_cipher(value)"
+  severity: high
+  message: "Weak cipher suite negotiated: {value}"
+  recommendation: "Restrict server cipher list to AEAD ciphers (AES-GCM, ChaCha20-Poly1305)."
+
+# ── Key Exchange Rules ──
+
+- id: no-forward-secrecy
+  applies_to: handshake.key_exchange_type
+  condition: "value == 'rsa'"
+  severity: medium
+  message: "RSA key exchange used — no forward secrecy"
+  recommendation: "Configure server to prefer ECDHE/DHE key exchange."
+
+# ── Certificate Key Strength Rules ──
+
+- id: weak-cert-key-rsa
+  applies_to: certificate.key_length_bits
+  condition: "certificate.public_key_algorithm == 'RSA' and value < 2048"
+  severity: high
+  message: "Certificate RSA key length {value} bits is below 2048"
+  recommendation: "Reissue certificate with an RSA key >= 2048 bits, or switch to ECDSA."
+
+- id: weak-cert-key-ecdsa
+  applies_to: certificate.key_length_bits
+  condition: "certificate.public_key_algorithm == 'ECDSA' and value < 256"
+  severity: high
+  message: "Certificate ECDSA key length {value} bits is below 256"
+  recommendation: "Reissue certificate with an ECDSA key >= 256 bits (P-256 or stronger)."
+
+# ── Certificate Signature Algorithm Rules ──
+
+- id: weak-cert-signature
+  applies_to: certificate.signature_algorithm
+  condition: "value in ['md5', 'sha1']"
+  severity: high
+  message: "Certificate signed with weak algorithm: {value}"
+  recommendation: "Reissue certificate signed with SHA-256 or stronger."
+
+# ── Certificate Expiry Rules ──
+
+- id: cert-expired
+  applies_to: certificate.not_after
+  condition: "is_expired(value)"
+  severity: critical
+  message: "Certificate expired on {value}"
+  recommendation: "Renew certificate immediately."
+
+- id: cert-expiring-soon
+  applies_to: certificate.not_after
+  condition: "is_expiring_soon(value, 30)"
+  severity: low
+  message: "Certificate expires within 30 days ({value})"
+  recommendation: "Schedule certificate renewal."
+
+# ── Self-Signed Certificate ──
+
+- id: self-signed-cert
+  applies_to: certificate.self_signed
+  condition: "value == true"
+  severity: medium
+  message: "Certificate is self-signed"
+  recommendation: "Replace with a certificate from a trusted Certificate Authority."
+
+# ── STARTTLS Stripping Detection ──
+
+- id: starttls-stripped
+  applies_to: session.starttls_completed
+  condition: "session.tls_mode == 'starttls' and value == false and session.starttls_advertised == true"
+  severity: critical
+  message: "STARTTLS was advertised but never completed — possible downgrade/stripping attack"
+  recommendation: "Investigate for an on-path attacker; consider MTA-STS/DANE enforcement."
+
+# ── No TLS / Plaintext Session ──
+
+- id: no-tls
+  applies_to: session.tls_mode
+  condition: "value == 'none'"
+  severity: critical
+  message: "Session transmitted entirely in plaintext without any TLS encryption"
+  recommendation: "Enable TLS on the mail server. Use STARTTLS for port 25/143/110, or implicit TLS on port 465/993/995."

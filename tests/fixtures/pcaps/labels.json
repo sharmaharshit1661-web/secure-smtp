@@ -1,0 +1,266 @@
+{
+  "smtp_tls12_good": {
+    "protocol": "smtp",
+    "tls_mode": "starttls",
+    "tls_version": "TLS1.2",
+    "cipher_suite": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+    "forward_secrecy": true,
+    "key_exchange": "ecdhe",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 4096,
+    "cert_expired": false,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha256",
+    "starttls_advertised": true,
+    "starttls_completed": true,
+    "expected_rules_fired": [
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "weak-cert-signature",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.10",
+    "pcap_file": "smtp_tls12_good.pcap"
+  },
+  "smtp_tls13_good": {
+    "protocol": "smtp",
+    "tls_mode": "implicit",
+    "tls_version": "TLS1.3",
+    "cipher_suite": "TLS_AES_128_GCM_SHA256",
+    "forward_secrecy": true,
+    "key_exchange": "ecdhe",
+    "visibility_limited": true,
+    "expected_rules_fired": [],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.11",
+    "pcap_file": "smtp_tls13_good.pcap"
+  },
+  "smtp_tls10_rc4": {
+    "protocol": "smtp",
+    "tls_mode": "starttls",
+    "tls_version": "TLS1.0",
+    "cipher_suite": "TLS_RSA_WITH_RC4_128_SHA",
+    "forward_secrecy": false,
+    "key_exchange": "rsa",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 2048,
+    "cert_expired": false,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha256",
+    "starttls_advertised": true,
+    "starttls_completed": true,
+    "expected_rules_fired": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "weak-cert-signature",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.20",
+    "pcap_file": "smtp_tls10_rc4.pcap"
+  },
+  "smtp_expired_cert": {
+    "protocol": "smtp",
+    "tls_mode": "starttls",
+    "tls_version": "TLS1.2",
+    "cipher_suite": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+    "forward_secrecy": true,
+    "key_exchange": "ecdhe",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 2048,
+    "cert_expired": true,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha256",
+    "starttls_advertised": true,
+    "starttls_completed": true,
+    "expected_rules_fired": [
+      "cert-expired",
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "weak-cert-key-rsa",
+      "weak-cert-signature",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.21",
+    "pcap_file": "smtp_expired_cert.pcap"
+  },
+  "smtp_self_signed_weak_key": {
+    "protocol": "smtp",
+    "tls_mode": "starttls",
+    "tls_version": "TLS1.2",
+    "cipher_suite": "TLS_RSA_WITH_AES_128_CBC_SHA",
+    "forward_secrecy": false,
+    "key_exchange": "rsa",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 1024,
+    "cert_expired": false,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha256",
+    "starttls_advertised": true,
+    "starttls_completed": true,
+    "expected_rules_fired": [
+      "no-forward-secrecy",
+      "weak-cert-key-rsa",
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "cert-expired",
+      "weak-cert-signature",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.22",
+    "pcap_file": "smtp_self_signed_weak_key.pcap"
+  },
+  "smtp_starttls_stripped": {
+    "protocol": "smtp",
+    "tls_mode": "none",
+    "starttls_advertised": true,
+    "starttls_completed": false,
+    "expected_rules_fired": [
+      "no-tls"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "weak-cert-signature"
+    ],
+    "server_ip": "192.168.1.30",
+    "pcap_file": "smtp_starttls_stripped.pcap"
+  },
+  "smtp_plaintext": {
+    "protocol": "smtp",
+    "tls_mode": "none",
+    "starttls_advertised": false,
+    "starttls_completed": false,
+    "expected_rules_fired": [
+      "no-tls"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "weak-cert-signature",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.31",
+    "pcap_file": "smtp_plaintext.pcap"
+  },
+  "imap_tls12_good": {
+    "protocol": "imap",
+    "tls_mode": "implicit",
+    "tls_version": "TLS1.2",
+    "cipher_suite": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+    "forward_secrecy": true,
+    "key_exchange": "ecdhe",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 2048,
+    "cert_expired": false,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha256",
+    "expected_rules_fired": [
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "weak-cert-signature",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.12",
+    "pcap_file": "imap_tls12_good.pcap"
+  },
+  "pop3_sha1_cert": {
+    "protocol": "pop3",
+    "tls_mode": "starttls",
+    "tls_version": "TLS1.2",
+    "cipher_suite": "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+    "forward_secrecy": true,
+    "key_exchange": "ecdhe",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 2048,
+    "cert_expired": false,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha1",
+    "starttls_advertised": true,
+    "starttls_completed": true,
+    "expected_rules_fired": [
+      "weak-cert-signature",
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "no-forward-secrecy",
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.23",
+    "pcap_file": "pop3_sha1_cert.pcap"
+  },
+  "smtp_no_forward_secrecy": {
+    "protocol": "smtp",
+    "tls_mode": "implicit",
+    "tls_version": "TLS1.2",
+    "cipher_suite": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+    "forward_secrecy": false,
+    "key_exchange": "rsa",
+    "cert_key_algo": "RSA",
+    "cert_key_bits": 2048,
+    "cert_expired": false,
+    "cert_self_signed": true,
+    "cert_sig_algo": "sha256",
+    "expected_rules_fired": [
+      "no-forward-secrecy",
+      "self-signed-cert"
+    ],
+    "expected_rules_silent": [
+      "deprecated-tls-version",
+      "weak-cipher",
+      "cert-expired",
+      "weak-cert-key-rsa",
+      "weak-cert-signature",
+      "no-tls",
+      "starttls-stripped"
+    ],
+    "server_ip": "192.168.1.24",
+    "pcap_file": "smtp_no_forward_secrecy.pcap"
+  }
+}
