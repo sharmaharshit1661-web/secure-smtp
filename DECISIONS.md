@@ -1,4 +1,4 @@
-# Implementation Decisions — SecureMailScope
+# Implementation Decisions — Secure SMTP
 
 Decisions made during implementation that weren't fully specified in the PRD/TAD.
 
