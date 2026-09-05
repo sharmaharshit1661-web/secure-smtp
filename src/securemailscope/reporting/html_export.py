@@ -316,7 +316,7 @@ REPORT_TEMPLATE = """<!DOCTYPE html>
 
         <div class="footer">
             <p>Secure SMTP — Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution</p>
-            <p>This report was generated automatically. Findings should be validated by a security professional.</p>
+            <p>Project belongs to <a href="https://github.com/sharmaharshit1661-web" target="_blank" style="color: inherit; text-decoration: none;">@sharmaharshit1661-web</a> &bull; Findings should be validated by a security professional.</p>
         </div>
     </div>
 </body>

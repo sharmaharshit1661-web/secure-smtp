@@ -121,6 +121,12 @@ tests/              # Comprehensive test suite (120 unit tests)
 
 ---
 
+## 👤 Author & Ownership
+
+This project belongs to **Harshit Sharma** ([@sharmaharshit1661-web](https://github.com/sharmaharshit1661-web)).
+
+---
+
 ## License
 
 MIT

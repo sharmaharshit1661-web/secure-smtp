@@ -917,6 +917,9 @@ with st.sidebar:
             Passive PCAP inspection with zero network transmission or message payload decryption.
         </div>
     </div>
+    <div style="text-align: center; margin-top: 0.85rem; margin-bottom: 0.5rem; font-size: 0.68rem; color: #475569; opacity: 0.65; letter-spacing: 0.02em;">
+        Project belongs to <a href="https://github.com/sharmaharshit1661-web" target="_blank" style="color: #64748B; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-weight: 500;">@sharmaharshit1661-web</a>
+    </div>
     """, unsafe_allow_html=True)
 
 

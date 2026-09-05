@@ -179,7 +179,7 @@ def _generate_pdf_reportlab(output_path: Path, data: dict[str, Any]) -> None:
     # Footer
     story.append(Spacer(1, 15))
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#cbd5e1"), spaceAfter=6))
-    story.append(Paragraph("Secure SMTP Automated Posture Assessment — Generated for Security Evaluation", subtitle_style))
+    story.append(Paragraph("Secure SMTP Automated Posture Assessment — Project belongs to @sharmaharshit1661-web", subtitle_style))
 
     doc.build(story)
     logger.info("Generated PDF report using ReportLab: %s", output_path)
