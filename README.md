@@ -116,8 +116,6 @@ tests/              # Comprehensive test suite (120 unit tests)
 
 ## 📋 Documentation
 
-- [`01_PRD.md`](01_PRD.md) — Product Requirements Document
-- [`02_TAD.md`](02_TAD.md) — Technical Architecture Document
 - [`DEMO_GUIDE.md`](DEMO_GUIDE.md) — Live Pitch & Demonstration Guide
 
 ---

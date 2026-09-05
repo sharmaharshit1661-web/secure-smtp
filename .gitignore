@@ -41,3 +41,11 @@ dist/
 *.egg-info/
 node_modules/
 frontend/dist/
+
+# Internal specs and planning docs
+01_PRD.md
+02_TAD.md
+03_IMPLEMENTATION_PLAN.md
+AGENTS.md
+CONVERSATION_SUMMARY.md
+PRODUCTION_READY.md
