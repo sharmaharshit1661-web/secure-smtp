@@ -16,8 +16,8 @@ from pathlib import Path
 import numpy as np
 from sklearn.ensemble import IsolationForest
 
-from securemailscope.ai.features import FeatureVector
-from securemailscope.db.models import AnomalyScore
+from secure_smtp.ai.features import FeatureVector
+from secure_smtp.db.models import AnomalyScore
 
 logger = logging.getLogger(__name__)
 

@@ -17,8 +17,8 @@ from pathlib import Path
 
 import numpy as np
 
-from securemailscope.ai.features import FeatureVector
-from securemailscope.db.models import (
+from secure_smtp.ai.features import FeatureVector
+from secure_smtp.db.models import (
     SEVERITY_WEIGHTS,
     Finding,
     RiskScore,

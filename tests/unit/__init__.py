@@ -1,1 +1,1 @@
-"""Unit tests for SecureMailScope."""
+"""Unit tests for Secure SMTP."""

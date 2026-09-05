@@ -12,7 +12,7 @@ import logging
 import struct
 from dataclasses import dataclass, field
 
-from securemailscope.db.models import KeyExchangeType
+from secure_smtp.db.models import KeyExchangeType
 
 logger = logging.getLogger(__name__)
 

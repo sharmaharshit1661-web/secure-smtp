@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-from securemailscope.ingest.pcap_reader import PacketStream, RawPacket
+from secure_smtp.ingest.pcap_reader import PacketStream, RawPacket
 
 logger = logging.getLogger(__name__)
 

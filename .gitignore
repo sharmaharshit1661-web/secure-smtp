@@ -32,6 +32,7 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+/tmp/secure_smtp_*
 /tmp/securemailscope_*
 
 # Build / Egg metadata

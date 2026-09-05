@@ -7,11 +7,11 @@
 
 ## Project Identity
 
-**Name:** Secure SMTP (SecureMailScope)
+**Name:** Secure SMTP
 **Author:** Harshit Sharma
 **License:** MIT
 **Python:** 3.11+
-**Package name:** `securemailscope`
+**Package name:** `secure_smtp`
 
 **What it does:** An enterprise-grade passive network forensic platform that ingests PCAP files containing email traffic (SMTP, IMAP, POP3), reconstructs TLS handshakes and certificate chains, evaluates cryptographic security posture against compliance standards (NIST SP 800-52r2, PCI-DSS v4.0, RFC 8996), and produces AI-explained risk scores with anomaly detection — all without decrypting message content.
 
@@ -34,15 +34,15 @@
 
 | Component | Technology | File(s) |
 |---|---|---|
-| PCAP Parsing | Scapy | `src/securemailscope/ingest/pcap_reader.py`, `tcp_stream.py`, `protocol_id.py` |
-| TLS & Certs | `cryptography` (X.509) | `src/securemailscope/tls/handshake_parser.py`, `cert_parser.py` |
-| Fingerprinting | JA3, JA3S, JA4, JA4S | `src/securemailscope/tls/fingerprint.py` |
-| Rule Engine | YAML + safe evaluator | `src/securemailscope/rules/engine.py`, `ruleset.yaml` |
-| AI / ML | scikit-learn (Isolation Forest) + SHAP | `src/securemailscope/ai/risk_model.py`, `anomaly_model.py`, `explain.py`, `features.py` |
-| Database | MongoDB (PyMongo) | `src/securemailscope/db/mongodb.py`, `models.py` |
-| API Backend | FastAPI + Uvicorn | `src/securemailscope/api/main.py` |
-| Dashboard | Streamlit + Plotly | `dashboard/app.py` |
-| Reporting | WeasyPrint + Jinja2 | `src/securemailscope/reporting/json_export.py`, `html_export.py`, `pdf_export.py` |
+| PCAP Parsing | Scapy | `src/secure_smtp/ingest/pcap_reader.py`, `tcp_stream.py`, `protocol_id.py` |
+| TLS & Certs | `cryptography` (X.509) | `src/secure_smtp/tls/handshake_parser.py`, `cert_parser.py` |
+| Fingerprinting | JA3, JA3S, JA4, JA4S | `src/secure_smtp/tls/fingerprint.py` |
+| Rule Engine | YAML + safe evaluator | `src/secure_smtp/rules/engine.py`, `ruleset.yaml` |
+| AI / ML | scikit-learn (Isolation Forest) + SHAP | `src/secure_smtp/ai/risk_model.py`, `anomaly_model.py`, `explain.py`, `features.py` |
+| Database | MongoDB (PyMongo) | `src/secure_smtp/db/mongodb.py`, `models.py` |
+| API Backend | FastAPI + Uvicorn | `src/secure_smtp/api/main.py` |
+| Frontend Console | React 19 + Vite | `frontend/src/App.jsx`, `Layout.jsx`, `pages/` |
+| Reporting | WeasyPrint + Jinja2 | `src/secure_smtp/reporting/json_export.py`, `html_export.py`, `pdf_export.py` |
 
 ---
 
@@ -50,7 +50,7 @@
 
 ```
 Secure HTTP/
-├── src/securemailscope/         # Main Python package
+├── src/secure_smtp/             # Main Python package
 │   ├── __init__.py              # Version: 0.1.0
 │   ├── ingest/                  # Stage 1-2: PCAP reading, TCP reassembly, protocol detection
 │   ├── tls/                     # Stage 3: TLS handshake parsing, cert extraction, JA3/JA4
@@ -64,23 +64,20 @@ Secure HTTP/
 │   └── db/
 │       ├── models.py            # Pydantic v2 models: Session, TLSHandshake, Certificate, Finding, RiskScore, AnomalyScore, Host, AnalysisJob
 │       ├── mongodb.py           # MongoDB connection (singleton client), collection accessors, indexes, serialization
-│       └── session.py           # Legacy SQLite session helper (not used in current MongoDB flow)
-├── dashboard/
-│   └── app.py                   # Streamlit SOC dashboard (~69KB, glassmorphic dark theme)
+│       └── session.py           # Compatibility session helper
+├── frontend/                    # Modern React + Vite command cartography UI
 ├── tests/
 │   ├── unit/test_pipeline.py    # ~120 unit tests
 │   └── fixtures/pcaps/          # Test PCAP files
 ├── scripts/
 │   └── seed_demo_data.py        # Seeds MongoDB with fixture PCAPs for demos
-├── .streamlit/config.toml       # Streamlit theme + server config
 ├── pyproject.toml               # Dependencies and build config
-├── start_demo.sh                # 1-command launcher (FastAPI + Streamlit + seed)
+├── start_demo.sh                # 1-command launcher (FastAPI + React frontend + seed)
 ├── PRODUCTION_READY.md          # Comprehensive production readiness guide (20 sections)
 ├── 01_PRD.md                    # Product Requirements Document
 ├── 02_TAD.md                    # Technical Architecture Document
 ├── 03_IMPLEMENTATION_PLAN.md    # Phased build plan
-├── DEMO_GUIDE.md                # Live pitch guide
-└── securemailscope.db           # Legacy SQLite file (ignored; MongoDB is the active DB)
+└── DEMO_GUIDE.md                # Live pitch guide
 ```
 
 ---
@@ -134,8 +131,8 @@ AnalysisJob     → job_id, status (queued|running|done|failed), timestamps
 
 # Manual
 source .venv/bin/activate
-PYTHONPATH=src uvicorn securemailscope.api.main:app --reload --port 8000
-PYTHONPATH=src streamlit run dashboard/app.py  # separate terminal
+PYTHONPATH=src uvicorn secure_smtp.api.main:app --reload --port 8000
+cd frontend && npm run dev  # separate terminal (port 5173)
 
 # Tests
 pytest tests/ -v
@@ -144,7 +141,7 @@ pytest tests/ -v
 PYTHONPATH=src python scripts/seed_demo_data.py
 ```
 
-- Dashboard: http://localhost:8501
+- Web Console: http://localhost:5173
 - API: http://localhost:8000
 - Swagger: http://localhost:8000/docs
 
@@ -157,7 +154,6 @@ This project is currently **demo/hackathon grade**. See `PRODUCTION_READY.md` fo
 ### 🔴 P0 — Must Fix Before Any Deployment
 - **CORS is `allow_origins=["*"]`** — wide open (`main.py` line 60)
 - **MongoDB has no authentication** — connects to bare `localhost:27017`
-- **Streamlit XSRF protection disabled** (`.streamlit/config.toml` line 16)
 - **File uploads go to `/tmp/`** — ephemeral, lost on reboot (`main.py` line 67-68)
 - **No API authentication** — any client can call any endpoint
 - **No secrets management** — hardcoded defaults
@@ -186,7 +182,7 @@ This project is currently **demo/hackathon grade**. See `PRODUCTION_READY.md` fo
 - **Enums** for protocol types, TLS modes, severities, risk tiers, key exchange types
 - **MongoDB** document storage (not SQLite — `session.py` is legacy)
 - JSON-encoded fields for lists/dicts stored in Pydantic models (e.g., `tls_version_offered`, `extensions`, `feature_attribution`)
-- Import from `securemailscope.db.mongodb` for DB access, never instantiate `MongoClient` directly
+- Import from `secure_smtp.db.mongodb` for DB access, never instantiate `MongoClient` directly
 - Use `get_next_sequence("name")` for integer ID generation
 - Rule engine conditions in `ruleset.yaml` use a safe evaluator — never `eval()`
 - SHAP explanations stored as JSON in `RiskScore.feature_attribution`
@@ -196,7 +192,7 @@ This project is currently **demo/hackathon grade**. See `PRODUCTION_READY.md` fo
 
 ## Dependencies (from `pyproject.toml`)
 
-**Core:** scapy, cryptography, pyyaml, scikit-learn, xgboost, shap, numpy, pandas, fastapi, uvicorn, python-multipart, weasyprint, reportlab, jinja2, pymongo, sqlmodel, streamlit, httpx, plotly
+**Core:** scapy, cryptography, pyyaml, scikit-learn, xgboost, shap, numpy, pandas, fastapi, uvicorn, python-multipart, weasyprint, reportlab, jinja2, pymongo, httpx, plotly
 
 **Dev:** pytest, pytest-asyncio, ruff
 

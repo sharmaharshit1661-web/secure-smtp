@@ -1,5 +1,5 @@
 """
-Comprehensive unit tests for SecureMailScope.
+Comprehensive unit tests for Secure SMTP.
 
 Tests the full pipeline against labeled synthetic PCAPs:
 - Phase 1: PCAP parsing, TCP reassembly, protocol/STARTTLS identification
@@ -39,12 +39,12 @@ def _get_pcap_path(scenario_name: str) -> Path:
 
 def _analyze_pcap(pcap_path: Path):
     """Run Stages 1-3 on a PCAP and return pipeline results."""
-    from securemailscope.ingest.pcap_reader import read_pcap
-    from securemailscope.ingest.protocol_id import identify_protocol
-    from securemailscope.ingest.tcp_stream import reassemble_stream
-    from securemailscope.tls.cert_parser import parse_certificate_chain
-    from securemailscope.tls.fingerprint import compute_fingerprints
-    from securemailscope.tls.handshake_parser import parse_handshake
+    from secure_smtp.ingest.pcap_reader import read_pcap
+    from secure_smtp.ingest.protocol_id import identify_protocol
+    from secure_smtp.ingest.tcp_stream import reassemble_stream
+    from secure_smtp.tls.cert_parser import parse_certificate_chain
+    from secure_smtp.tls.fingerprint import compute_fingerprints
+    from secure_smtp.tls.handshake_parser import parse_handshake
 
     streams = read_pcap(str(pcap_path))
     assert len(streams) >= 1, f"No streams found in {pcap_path.name}"
@@ -85,8 +85,8 @@ def _run_rules(proto_id, parsed_hs, parsed_certs, reassembled):
     """Run rule engine and return findings."""
     import json as _json
 
-    from securemailscope.db.models import Certificate, Session, TLSHandshake, TLSMode
-    from securemailscope.rules.engine import RuleEngine
+    from secure_smtp.db.models import Certificate, Session, TLSHandshake, TLSMode
+    from secure_smtp.rules.engine import RuleEngine
 
     # Build model objects (not persisted — just for rule evaluation)
     session = Session(
@@ -156,13 +156,13 @@ class TestPcapReader:
     ])
     def test_pcap_reads_without_error(self, scenario):
         """Every test PCAP should load without error."""
-        from securemailscope.ingest.pcap_reader import read_pcap
+        from secure_smtp.ingest.pcap_reader import read_pcap
         streams = read_pcap(str(_get_pcap_path(scenario)))
         assert len(streams) >= 1
 
     def test_pcap_file_not_found(self):
         """Missing PCAP should raise FileNotFoundError."""
-        from securemailscope.ingest.pcap_reader import read_pcap
+        from secure_smtp.ingest.pcap_reader import read_pcap
         with pytest.raises(FileNotFoundError):
             read_pcap("/nonexistent/test.pcap")
 
@@ -477,7 +477,7 @@ class TestFeatureVector:
 
     def _build_fv(self, scenario: str):
 
-        from securemailscope.ai.features import build_feature_vector
+        from secure_smtp.ai.features import build_feature_vector
 
         result = _analyze_pcap(_get_pcap_path(scenario))
         findings, session, handshake_model, cert_models = _run_rules(
@@ -512,8 +512,8 @@ class TestRiskScoring:
     """Test risk scoring produces correct tiers and scores."""
 
     def _score_scenario(self, scenario: str):
-        from securemailscope.ai.features import build_feature_vector
-        from securemailscope.ai.risk_model import RiskModel
+        from secure_smtp.ai.features import build_feature_vector
+        from secure_smtp.ai.risk_model import RiskModel
 
         result = _analyze_pcap(_get_pcap_path(scenario))
         findings, session, handshake_model, cert_models = _run_rules(
@@ -565,8 +565,8 @@ class TestAnomalyDetection:
 
     def test_anomaly_detector_runs(self):
         """Anomaly detector should work even with small datasets."""
-        from securemailscope.ai.anomaly_model import AnomalyDetector
-        from securemailscope.ai.features import build_feature_vector
+        from secure_smtp.ai.anomaly_model import AnomalyDetector
+        from secure_smtp.ai.features import build_feature_vector
 
         # Build feature vectors for several scenarios
         vectors = []
@@ -596,8 +596,8 @@ class TestHostRollup:
     """Test host-level risk score aggregation."""
 
     def test_host_rollup_weighted(self):
-        from securemailscope.ai.features import build_feature_vector
-        from securemailscope.ai.risk_model import RiskModel, compute_host_rollup
+        from secure_smtp.ai.features import build_feature_vector
+        from secure_smtp.ai.risk_model import RiskModel, compute_host_rollup
 
         # Score multiple scenarios
         risk_scores = []
@@ -629,16 +629,16 @@ class TestDemoPcap:
     """Test the composite demo PCAP works end-to-end."""
 
     def test_demo_pcap_loads(self):
-        from securemailscope.ingest.pcap_reader import read_pcap
+        from secure_smtp.ingest.pcap_reader import read_pcap
         demo_path = FIXTURES_DIR / "demo_composite.pcap"
         streams = read_pcap(str(demo_path))
         assert len(streams) >= 5, f"Demo PCAP should have multiple streams, got {len(streams)}"
 
     def test_demo_pcap_has_findings(self):
         """The composite demo should produce both clean and flagged sessions."""
-        from securemailscope.ingest.pcap_reader import read_pcap
-        from securemailscope.ingest.protocol_id import identify_protocol
-        from securemailscope.ingest.tcp_stream import reassemble_stream
+        from secure_smtp.ingest.pcap_reader import read_pcap
+        from secure_smtp.ingest.protocol_id import identify_protocol
+        from secure_smtp.ingest.tcp_stream import reassemble_stream
 
         demo_path = FIXTURES_DIR / "demo_composite.pcap"
         streams = read_pcap(str(demo_path))

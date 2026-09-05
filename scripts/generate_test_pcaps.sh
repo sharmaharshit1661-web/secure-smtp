@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # generate_test_pcaps.sh
-# Generates labeled test PCAPs for SecureMailScope validation.
+# Generates labeled test PCAPs for Secure SMTP validation.
 #
 # Strategy: Uses Docker Compose to spin up Postfix/Dovecot servers with
 # deliberately varied TLS configurations, then captures traffic with tcpdump.
@@ -21,7 +21,7 @@ OUTPUT_DIR="${1:-tests/fixtures/pcaps}"
 mkdir -p "$OUTPUT_DIR"
 
 echo "========================================="
-echo " SecureMailScope Test PCAP Generator"
+echo " Secure SMTP Test PCAP Generator"
 echo "========================================="
 echo ""
 echo "NOTE: This script requires Docker and Docker Compose."

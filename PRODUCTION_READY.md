@@ -59,7 +59,7 @@ Replace scattered `os.environ.get()` calls with a centralized, validated config 
 pip install pydantic-settings
 ```
 
-Create `src/securemailscope/config.py`:
+Create `src/secure_smtp/config.py`:
 
 ```python
 """Centralized, validated configuration for Secure SMTP."""
@@ -181,7 +181,7 @@ app.add_middleware(
 
 **Production Fix:**
 ```python
-from securemailscope.config import settings
+from secure_smtp.config import settings
 
 app.add_middleware(
     CORSMiddleware,
@@ -194,14 +194,14 @@ app.add_middleware(
 
 ### 3.2 Add API Authentication
 
-Create `src/securemailscope/api/auth.py`:
+Create `src/secure_smtp/api/auth.py`:
 
 ```python
 """API authentication middleware."""
 
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
-from securemailscope.config import settings
+from secure_smtp.config import settings
 
 api_key_header = APIKeyHeader(name=settings.API_KEY_HEADER, auto_error=False)
 
@@ -215,7 +215,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
 
 Then protect your endpoints:
 ```python
-from securemailscope.api.auth import verify_api_key
+from secure_smtp.api.auth import verify_api_key
 
 @app.post("/api/analyze", dependencies=[Depends(verify_api_key)])
 async def analyze_pcap(...):
@@ -461,7 +461,7 @@ pip install gunicorn
 
 ```bash
 # Production launch command
-gunicorn securemailscope.api.main:app \
+gunicorn secure_smtp.api.main:app \
   --worker-class uvicorn.workers.UvicornWorker \
   --workers 4 \
   --bind 0.0.0.0:8000 \
@@ -521,7 +521,7 @@ server {
 
 ```python
 # In main.py
-from securemailscope.config import settings
+from secure_smtp.config import settings
 
 app = FastAPI(
     title="Secure SMTP",
@@ -645,16 +645,16 @@ For true production scale, replace Streamlit with a React/Next.js frontend that 
 pip install celery[redis] redis
 ```
 
-Create `src/securemailscope/tasks/worker.py`:
+Create `src/secure_smtp/tasks/worker.py`:
 
 ```python
 """Celery worker for background PCAP analysis."""
 
 from celery import Celery
-from securemailscope.config import settings
+from secure_smtp.config import settings
 
 celery_app = Celery(
-    "securemailscope",
+    "secure_smtp",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
 )
@@ -677,7 +677,7 @@ celery_app.conf.update(
 def analyze_pcap_task(self, job_id: str, pcap_path: str):
     """Run PCAP analysis with retry support."""
     try:
-        from securemailscope.api.main import _run_analysis
+        from secure_smtp.api.main import _run_analysis
         _run_analysis(job_id, pcap_path)
     except Exception as exc:
         self.retry(exc=exc)
@@ -690,21 +690,21 @@ async def analyze_pcap(file: UploadFile = File(...)):
     ...
     # Replace: background_tasks.add_task(_run_analysis, job_id, str(pcap_path))
     # With:
-    from securemailscope.tasks.worker import analyze_pcap_task
+    from secure_smtp.tasks.worker import analyze_pcap_task
     analyze_pcap_task.delay(job_id, str(pcap_path))
     ...
 ```
 
 Launch the Celery worker:
 ```bash
-celery -A securemailscope.tasks.worker worker --loglevel=info --concurrency=4
+celery -A secure_smtp.tasks.worker worker --loglevel=info --concurrency=4
 ```
 
 ### 7.3 Monitor with Flower
 
 ```bash
 pip install flower
-celery -A securemailscope.tasks.worker flower --port=5555
+celery -A secure_smtp.tasks.worker flower --port=5555
 ```
 
 ---
@@ -776,7 +776,7 @@ EXPOSE 8000
 ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 
-CMD ["gunicorn", "securemailscope.api.main:app", \
+CMD ["gunicorn", "secure_smtp.api.main:app", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--workers", "4", \
      "--bind", "0.0.0.0:8000", \
@@ -810,7 +810,7 @@ services:
   # ── Celery Worker ──
   worker:
     build: .
-    command: celery -A securemailscope.tasks.worker worker --loglevel=info --concurrency=4
+    command: celery -A secure_smtp.tasks.worker worker --loglevel=info --concurrency=4
     env_file: .env
     volumes:
       - uploads:/var/securesmtp/uploads
@@ -865,7 +865,7 @@ services:
   # ── Celery Flower (Task Monitor) ──
   flower:
     build: .
-    command: celery -A securemailscope.tasks.worker flower --port=5555
+    command: celery -A secure_smtp.tasks.worker flower --port=5555
     ports:
       - "5555:5555"
     env_file: .env
@@ -912,7 +912,7 @@ __pycache__
 .codex
 .cursor
 .impeccable
-securemailscope.db
+secure_smtp.db
 tests/
 scripts/
 *.md
@@ -962,7 +962,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
-      - run: pytest tests/ -v --tb=short --cov=securemailscope --cov-report=xml
+      - run: pytest tests/ -v --tb=short --cov=secure_smtp --cov-report=xml
       - uses: codecov/codecov-action@v4
         with:
           file: coverage.xml
@@ -1022,7 +1022,7 @@ Replace basic logging with structured JSON logs:
 pip install structlog python-json-logger
 ```
 
-Create `src/securemailscope/logging_config.py`:
+Create `src/secure_smtp/logging_config.py`:
 
 ```python
 """Production logging configuration."""
@@ -1069,7 +1069,7 @@ pip install sentry-sdk[fastapi]
 
 ```python
 import sentry_sdk
-from securemailscope.config import settings
+from secure_smtp.config import settings
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(
@@ -1158,7 +1158,7 @@ You have **1 test file** (`test_pipeline.py`). Production needs much more:
 # tests/integration/test_api.py
 import pytest
 from httpx import AsyncClient, ASGITransport
-from securemailscope.api.main import app
+from secure_smtp.api.main import app
 
 
 @pytest.fixture
@@ -1325,9 +1325,9 @@ pip install boto3
 ```
 
 ```python
-# src/securemailscope/storage.py
+# src/secure_smtp/storage.py
 import boto3
-from securemailscope.config import settings
+from secure_smtp.config import settings
 
 s3 = boto3.client("s3")
 
@@ -1361,7 +1361,7 @@ The Isolation Forest and risk model are **retrained from scratch on every PCAP u
 ### 14.2 Solution: Model Registry
 
 ```python
-# src/securemailscope/ai/model_registry.py
+# src/secure_smtp/ai/model_registry.py
 import joblib
 from pathlib import Path
 from datetime import datetime
@@ -1397,7 +1397,7 @@ def load_latest_model(name: str):
 # Add to Celery beat schedule:
 celery_app.conf.beat_schedule = {
     "retrain-anomaly-model": {
-        "task": "securemailscope.tasks.worker.retrain_anomaly_model",
+        "task": "secure_smtp.tasks.worker.retrain_anomaly_model",
         "schedule": crontab(hour=3, minute=0, day_of_week=0),  # Sunday 3 AM
     },
 }
@@ -1497,7 +1497,7 @@ Document and **test** these runbooks:
 Log every sensitive action:
 
 ```python
-# src/securemailscope/audit.py
+# src/secure_smtp/audit.py
 import structlog
 
 audit_logger = structlog.get_logger("audit")

@@ -12,8 +12,8 @@ import logging
 import re
 from dataclasses import dataclass
 
-from securemailscope.db.models import ProtocolType, TLSMode
-from securemailscope.ingest.tcp_stream import ReassembledStream
+from secure_smtp.db.models import ProtocolType, TLSMode
+from secure_smtp.ingest.tcp_stream import ReassembledStream
 
 logger = logging.getLogger(__name__)
 

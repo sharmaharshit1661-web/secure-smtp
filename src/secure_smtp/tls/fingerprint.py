@@ -14,7 +14,7 @@ import hashlib
 import logging
 from dataclasses import dataclass
 
-from securemailscope.tls.handshake_parser import ParsedClientHello, ParsedServerHello
+from secure_smtp.tls.handshake_parser import ParsedClientHello, ParsedServerHello
 
 logger = logging.getLogger(__name__)
 

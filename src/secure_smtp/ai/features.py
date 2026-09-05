@@ -14,7 +14,7 @@ from datetime import UTC
 
 import numpy as np
 
-from securemailscope.db.models import (
+from secure_smtp.db.models import (
     Certificate,
     Finding,
     Session,

@@ -41,13 +41,13 @@ Golden rule for implementation order: **stages 1–3 must be validated correct b
 ## 3. Repository layout
 
 ```
-securemailscope/
+Secure HTTP/
 ├── 01_PRD.md
 ├── 02_TAD.md
 ├── 03_IMPLEMENTATION_PLAN.md
 ├── pyproject.toml
 ├── src/
-│   └── securemailscope/
+│   └── secure_smtp/
 │       ├── ingest/            # Stage 1-2: pcap read, TCP reassembly, protocol/STARTTLS ID
 │       │   ├── pcap_reader.py
 │       │   ├── tcp_stream.py
@@ -258,13 +258,13 @@ Analysis runs as a background task (FastAPI `BackgroundTasks` is sufficient for 
 
 ```bash
 # backend
-cd securemailscope
+cd "Secure HTTP"
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-uvicorn securemailscope.api.main:app --reload
+PYTHONPATH=src uvicorn secure_smtp.api.main:app --reload
 
-# dashboard (if Streamlit)
-streamlit run dashboard/app.py
+# frontend console
+cd frontend && npm run dev
 
 # tests
 pytest tests/

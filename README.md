@@ -31,7 +31,7 @@ Secure SMTP is an enterprise-grade passive network forensic and posture assessme
 # Clone or enter the project directory
 cd "Secure HTTP"
 
-# Launch everything (FastAPI + Streamlit with auto-seeded demo data)
+# Launch everything (FastAPI backend + React frontend with auto-seeded demo data)
 ./start_demo.sh
 ```
 
@@ -44,14 +44,15 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 
 # Start the API backend
-PYTHONPATH=src uvicorn securemailscope.api.main:app --reload --port 8000
+PYTHONPATH=src uvicorn secure_smtp.api.main:app --reload --port 8000
 
-# In another terminal, start the Streamlit dashboard
-source .venv/bin/activate
-PYTHONPATH=src streamlit run dashboard/app.py
+# In another terminal, start the React frontend
+cd frontend
+npm install
+npm run dev
 ```
 
-Open `http://localhost:8501` to access the Secure SMTP Security Operations Console.
+Open `http://localhost:5173` to access the Secure SMTP Security Operations Console.
 
 ---
 
@@ -60,7 +61,7 @@ Open `http://localhost:8501` to access the Secure SMTP Security Operations Conso
 ```
 [ PCAP Ingest ] → [ Protocol / STARTTLS Identification ] → [ TLS Handshake & Cert Parsing ]
                                                                       ↓
-[ Rule Engine ] → [ Explainable AI Risk Scoring + Isolation Forest ] → [ MongoDB + Dashboard + Reports ]
+[ Rule Engine ] → [ Explainable AI Risk Scoring + Isolation Forest ] → [ MongoDB + Web UI + Reports ]
 ```
 
 ### Tech Stack
@@ -74,7 +75,7 @@ Open `http://localhost:8501` to access the Secure SMTP Security Operations Conso
 | **AI / ML** | scikit-learn + SHAP | Isolation Forest anomaly detection & SHAP attributions |
 | **Database** | MongoDB (PyMongo) | Document-oriented persistence |
 | **API Backend** | FastAPI + Uvicorn | Async REST endpoints |
-| **Dashboard** | Streamlit + Plotly | Glassmorphic dark-mode SOC console |
+| **Frontend Console** | React 19 + Vite | Command-Cartography dark-mode SOC console |
 | **Reporting** | WeasyPrint + Jinja2 | Exportable PDF, HTML, and JSON audit dossiers |
 
 ---
@@ -82,7 +83,7 @@ Open `http://localhost:8501` to access the Secure SMTP Security Operations Conso
 ## 📁 Project Structure
 
 ```
-src/securemailscope/
+src/secure_smtp/
 ├── ingest/         # PCAP reading, TCP stream reassembly, protocol detection
 ├── tls/            # TLS handshake parsing, certificate extraction, JA3/JA4 fingerprinting
 ├── rules/          # YAML-driven crypto weakness rule engine
@@ -90,7 +91,7 @@ src/securemailscope/
 ├── db/             # MongoDB connection manager and Pydantic v2 document models
 ├── reporting/      # JSON, HTML, PDF report generation
 └── api/            # FastAPI REST endpoints
-dashboard/          # Streamlit SOC dashboard
+frontend/           # Modern React + Vite web console
 scripts/            # PCAP generators and MongoDB demo data seeders
 tests/              # Comprehensive test suite (120 unit tests)
 ```

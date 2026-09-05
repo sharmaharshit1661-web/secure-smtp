@@ -15,9 +15,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from securemailscope.api.main import _run_analysis
-from securemailscope.db.models import AnalysisJob
-from securemailscope.db.mongodb import (
+from secure_smtp.api.main import _run_analysis
+from secure_smtp.db.models import AnalysisJob
+from secure_smtp.db.mongodb import (
     drop_database,
     get_hosts_col,
     get_jobs_col,

@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "securemailscope"
+name = "secure-smtp"
 version = "0.1.0"
 description = "AI-Assisted Cryptographic Security Posture Assessment for Secure Email Communications"
 readme = "README.md"
@@ -38,10 +38,6 @@ dependencies = [
 
     # Database
     "pymongo>=4.6.0",
-    "sqlmodel>=0.0.14",
-
-    # Dashboard
-    "streamlit>=1.28",
 
     # Utilities
     "httpx>=0.25",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate synthetic test PCAPs for SecureMailScope.
+Generate synthetic test PCAPs for Secure SMTP.
 
 Creates deterministic test PCAPs using scapy that simulate various
 email protocol sessions across good and bad TLS configurations.

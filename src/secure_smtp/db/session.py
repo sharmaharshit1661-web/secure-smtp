@@ -6,7 +6,7 @@ Provides compatibility functions for MongoDB initialization and collection reset
 
 from __future__ import annotations
 
-from securemailscope.db.mongodb import (
+from secure_smtp.db.mongodb import (
     drop_database,
     get_database,
     get_hosts_col,

@@ -15,8 +15,8 @@ from typing import Any
 
 import numpy as np
 
-from securemailscope.ai.features import FEATURE_NAMES, FeatureVector
-from securemailscope.db.models import SEVERITY_WEIGHTS, Finding, RiskScore
+from secure_smtp.ai.features import FEATURE_NAMES, FeatureVector
+from secure_smtp.db.models import SEVERITY_WEIGHTS, Finding, RiskScore
 
 logger = logging.getLogger(__name__)
 

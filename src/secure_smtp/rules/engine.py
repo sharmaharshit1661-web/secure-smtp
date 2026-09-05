@@ -17,14 +17,14 @@ from typing import Any
 
 import yaml
 
-from securemailscope.db.models import (
+from secure_smtp.db.models import (
     Certificate,
     Finding,
     Session,
     Severity,
     TLSHandshake,
 )
-from securemailscope.tls.handshake_parser import CIPHER_NAMES, WEAK_CIPHER_IDS
+from secure_smtp.tls.handshake_parser import CIPHER_NAMES, WEAK_CIPHER_IDS
 
 logger = logging.getLogger(__name__)
 

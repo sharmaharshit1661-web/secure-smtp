@@ -2,7 +2,7 @@
 # ==============================================================================
 # Secure SMTP — Demo & Presentation Launcher
 # ==============================================================================
-# Launches both the FastAPI backend and Streamlit dashboard with 1 command.
+# Launches both the FastAPI backend and React web console with 1 command.
 # Seeds sample data if needed.
 # ==============================================================================
 
@@ -30,14 +30,14 @@ fi
 echo "✓ Checking demo database (MongoDB)..."
 PYTHONPATH=src python scripts/seed_demo_data.py
 
-# 3. Clean up existing processes on ports 8000 and 8501 if any
+# 3. Clean up existing processes on ports 8000 and 5173 if any
 echo "✓ Checking ports..."
 lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-lsof -ti:8501 | xargs kill -9 2>/dev/null || true
+lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 
 # 4. Start FastAPI Backend
 echo "✓ Starting FastAPI backend on http://localhost:8000..."
-PYTHONPATH=src uvicorn securemailscope.api.main:app --host 0.0.0.0 --port 8000 --log-level warning &
+PYTHONPATH=src uvicorn secure_smtp.api.main:app --host 0.0.0.0 --port 8000 --log-level warning &
 BACKEND_PID=$!
 
 # Wait for backend to be ready
@@ -49,9 +49,9 @@ for i in {1..30}; do
     sleep 0.5
 done
 
-# 5. Start Streamlit Dashboard
-echo "✓ Starting Streamlit dashboard on http://localhost:8501..."
-PYTHONPATH=src streamlit run dashboard/app.py --server.port 8501 --server.headless false &
+# 5. Start React Frontend
+echo "✓ Starting React Web Application on http://localhost:5173..."
+(cd frontend && npm run dev -- --host 0.0.0.0 --port 5173) &
 FRONTEND_PID=$!
 
 # 6. Presentation Ready Banner
@@ -59,7 +59,7 @@ echo ""
 echo "======================================================================"
 echo "🚀 Secure SMTP is LIVE and ready for presentation!"
 echo "======================================================================"
-echo "  🌐 Streamlit Dashboard:  http://localhost:8501"
+echo "  🌐 Web Console:          http://localhost:5173"
 echo "  📡 FastAPI Backend:      http://localhost:8000"
 echo "  📚 Swagger API Docs:     http://localhost:8000/docs"
 echo "  📁 Demo PCAPs Location:  $PROJECT_ROOT/tests/fixtures/pcaps/"

@@ -1,1 +1,1 @@
-"""Tests package for SecureMailScope."""
+"""Tests package for Secure SMTP."""

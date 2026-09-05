@@ -26,7 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pymongo import DESCENDING
 
-from securemailscope.db.models import (
+from secure_smtp.db.models import (
     AnalysisJob,
     AnomalyScore,
     Certificate,
@@ -36,7 +36,7 @@ from securemailscope.db.models import (
     Session,
     TLSHandshake,
 )
-from securemailscope.db.mongodb import (
+from secure_smtp.db.mongodb import (
     get_hosts_col,
     get_jobs_col,
     get_next_sequence,
@@ -64,10 +64,10 @@ app.add_middleware(
 )
 
 # Upload directory for PCAPs
-UPLOAD_DIR = Path(os.environ.get("SECUREMAILSCOPE_UPLOAD_DIR", "/tmp/securemailscope_uploads"))
+UPLOAD_DIR = Path(os.environ.get("SECURE_SMTP_UPLOAD_DIR", os.environ.get("SECUREMAILSCOPE_UPLOAD_DIR", "/tmp/secure_smtp_uploads")))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-REPORTS_DIR = Path(os.environ.get("SECUREMAILSCOPE_REPORTS_DIR", "/tmp/securemailscope_reports"))
+REPORTS_DIR = Path(os.environ.get("SECURE_SMTP_REPORTS_DIR", os.environ.get("SECUREMAILSCOPE_REPORTS_DIR", "/tmp/secure_smtp_reports")))
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -87,17 +87,17 @@ def _run_analysis(job_id: str, pcap_path: str) -> None:
     Pipeline: PCAP → TCP streams → Protocol ID → TLS handshake →
     Cert parsing → Rule engine → AI scoring → MongoDB storage → Report generation.
     """
-    from securemailscope.ai.anomaly_model import AnomalyDetector
-    from securemailscope.ai.explain import enrich_risk_score_with_explanation
-    from securemailscope.ai.features import build_feature_vector
-    from securemailscope.ai.risk_model import RiskModel, compute_host_rollup
-    from securemailscope.ingest.pcap_reader import read_pcap
-    from securemailscope.ingest.protocol_id import identify_protocol
-    from securemailscope.ingest.tcp_stream import reassemble_stream
-    from securemailscope.rules.engine import RuleEngine
-    from securemailscope.tls.cert_parser import parse_certificate_chain
-    from securemailscope.tls.fingerprint import compute_fingerprints
-    from securemailscope.tls.handshake_parser import parse_handshake
+    from secure_smtp.ai.anomaly_model import AnomalyDetector
+    from secure_smtp.ai.explain import enrich_risk_score_with_explanation
+    from secure_smtp.ai.features import build_feature_vector
+    from secure_smtp.ai.risk_model import RiskModel, compute_host_rollup
+    from secure_smtp.ingest.pcap_reader import read_pcap
+    from secure_smtp.ingest.protocol_id import identify_protocol
+    from secure_smtp.ingest.tcp_stream import reassemble_stream
+    from secure_smtp.rules.engine import RuleEngine
+    from secure_smtp.tls.cert_parser import parse_certificate_chain
+    from secure_smtp.tls.fingerprint import compute_fingerprints
+    from secure_smtp.tls.handshake_parser import parse_handshake
 
     jobs_col = get_jobs_col()
     hosts_col = get_hosts_col()
@@ -317,9 +317,9 @@ def _run_analysis(job_id: str, pcap_path: str) -> None:
 
 def _generate_reports(job_id: str) -> None:
     """Generate JSON, HTML, and PDF reports for a completed analysis from MongoDB."""
-    from securemailscope.reporting.html_export import generate_html_report
-    from securemailscope.reporting.json_export import generate_json_report
-    from securemailscope.reporting.pdf_export import generate_pdf_report
+    from secure_smtp.reporting.html_export import generate_html_report
+    from secure_smtp.reporting.json_export import generate_json_report
+    from secure_smtp.reporting.pdf_export import generate_pdf_report
 
     job_dir = REPORTS_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)

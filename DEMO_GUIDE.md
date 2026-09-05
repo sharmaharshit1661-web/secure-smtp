@@ -40,8 +40,8 @@ Email protocols (**SMTP, IMAP, POP3**) secure the majority of enterprise communi
        │
        ▼
 ┌────────────────────────────────────────────────────────┐
-│ Stage 6: FastAPI Backend + Streamlit Executive UI      │
-│  • Interactive Dashboard (Fleet + Session Deep-Dive)   │
+│ Stage 6: FastAPI Backend + React Executive UI          │
+│  • Interactive Web Console (Fleet + Session Deep-Dive) │
 │  • Multi-Format Export (JSON, HTML, Multi-Page PDF)    │
 └────────────────────────────────────────────────────────┘
 ```
@@ -51,11 +51,11 @@ Email protocols (**SMTP, IMAP, POP3**) secure the majority of enterprise communi
 ## 🚀 3. Quick Start (1-Command Launch)
 
 ```bash
-# Launch both FastAPI (:8000) and Streamlit (:8501) with auto-seeded demo data:
+# Launch both FastAPI (:8000) and React frontend (:5173) with auto-seeded demo data:
 ./start_demo.sh
 ```
 
-- **Streamlit Dashboard**: [http://localhost:8501](http://localhost:8501)
+- **React Web Console**: [http://localhost:5173](http://localhost:5173)
 - **FastAPI Interactive Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Test Suite**: `python -m pytest tests/unit/test_pipeline.py -v` (120/120 passing tests)
 
@@ -63,8 +63,8 @@ Email protocols (**SMTP, IMAP, POP3**) secure the majority of enterprise communi
 
 ## 🎬 4. Step-by-Step Judge Demonstration (3-Minute Script)
 
-### Step 1: Fleet Overview Tab (`http://localhost:8501`)
-1. Open the **Streamlit Dashboard** and navigate to **🌐 Fleet Overview**.
+### Step 1: Fleet Overview Tab (`http://localhost:5173`)
+1. Open the **Web Console** and navigate to **🌐 Fleet Overview**.
 2. **Point out the High-Level Metrics**:
    - Total Hosts Analyzed, Total Sessions, Fleet Average Risk Score, and Critical Hosts.
 3. **Show Risk Distribution Bar Chart**:
@@ -114,13 +114,13 @@ All scenarios are deterministically generated via Scapy in `scripts/generate_tes
 ## 💡 6. Judge Q&A Cheat Sheet
 
 **Q: How is this different from generic network scanners (like Nmap/testssl.sh)?**
-> *A: Active scanners actively probe endpoints and can be blocked by firewalls or rate-limiters. SecureMailScope performs **passive forensic analysis on actual network captures**, analyzing real sessions, client-server negotiation dynamics, STARTTLS stripping, and JA3/JA4 client fingerprints without emitting a single probe packet.*
+> *A: Active scanners actively probe endpoints and can be blocked by firewalls or rate-limiters. Secure SMTP performs **passive forensic analysis on actual network captures**, analyzing real sessions, client-server negotiation dynamics, STARTTLS stripping, and JA3/JA4 client fingerprints without emitting a single probe packet.*
 
 **Q: How does the AI explainability work?**
-> *A: SecureMailScope uses a two-tier explainability engine. First, every finding provides deterministic rule-weighted contributions with exact percentage breakdown. Second, when trained on labeled baseline data, our XGBoost calibration model integrates SHAP (SHapley Additive exPlanations) values to output mathematically rigorous feature attributions.*
+> *A: Secure SMTP uses a two-tier explainability engine. First, every finding provides deterministic rule-weighted contributions with exact percentage breakdown. Second, when trained on labeled baseline data, our XGBoost calibration model integrates SHAP (SHapley Additive exPlanations) values to output mathematically rigorous feature attributions.*
 
 **Q: How are false positives prevented (PRD NFR-2)?**
 > *A: Our test suite enforces strict negative testing (`test_expected_rules_silent`). In 120 automated test assertions, modern TLS 1.2 and 1.3 configurations are verified to never fire false alarms on deprecation, cipher strength, or key length.*
 
 **Q: What happens with TLS 1.3 where certificates are encrypted?**
-> *A: In TLS 1.3, handshake encryption begins immediately after ServerHello. SecureMailScope detects this via `Supported Versions` extension parsing, marks `visibility_limited=True`, extracts client/server cipher negotiations, and avoids raising false alarms on inaccessible certificate payloads.*
+> *A: In TLS 1.3, handshake encryption begins immediately after ServerHello. Secure SMTP detects this via `Supported Versions` extension parsing, marks `visibility_limited=True`, extracts client/server cipher negotiations, and avoids raising false alarms on inaccessible certificate payloads.*
