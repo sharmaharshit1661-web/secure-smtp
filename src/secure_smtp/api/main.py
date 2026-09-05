@@ -17,14 +17,19 @@ import json
 import logging
 import os
 import uuid
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pymongo import DESCENDING
+
+from secure_smtp.api.auth import AUTH_REQUIRED, verify_api_key
+from secure_smtp.compliance.frameworks import evaluate_fleet_compliance, evaluate_session_compliance
+from secure_smtp.config import get_settings
 
 from secure_smtp.db.models import (
     AnalysisJob,
@@ -39,6 +44,7 @@ from secure_smtp.db.models import (
 from secure_smtp.db.mongodb import (
     get_hosts_col,
     get_jobs_col,
+    get_mongo_auth_status,
     get_next_sequence,
     get_sessions_col,
     init_db_indexes,
@@ -47,56 +53,53 @@ from secure_smtp.db.mongodb import (
 
 logger = logging.getLogger(__name__)
 
+# ── Lifespan Handler ──
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup initialization and graceful shutdown."""
+    logger.info("Initializing Secure SMTP database indexes and services...")
+    init_db_indexes()
+    yield
+    logger.info("Shutting down Secure SMTP services...")
+
+
 # ── App Setup ──
 
 app = FastAPI(
     title="Secure SMTP",
     description="Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution for SMTP / IMAP / POP3",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
-# ── CORS Configuration ──
+# ── Configuration & CORS ──
 
-DEFAULT_CORS_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
+settings = get_settings()
 
-_cors_env = os.environ.get("SECURE_SMTP_CORS_ORIGINS", os.environ.get("CORS_ORIGINS", "")).strip()
-if _cors_env:
-    allowed_origins = [orig.strip() for orig in _cors_env.split(",") if orig.strip()]
-else:
-    allowed_origins = DEFAULT_CORS_ORIGINS
+DEFAULT_CORS_ORIGINS = settings.cors_origins
+allowed_origins = settings.cors_origins
 
 # If wildcard is explicitly used, credentials must be False per W3C CORS specification
 allow_credentials = False if "*" in allowed_origins else True
+allowed_headers = settings.cors_headers
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=allow_credentials,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+    allow_headers=allowed_headers,
     expose_headers=["Content-Disposition", "Content-Length", "X-Total-Count"],
     max_age=600,
 )
 
-# Upload directory for PCAPs
-UPLOAD_DIR = Path(os.environ.get("SECURE_SMTP_UPLOAD_DIR", os.environ.get("SECUREMAILSCOPE_UPLOAD_DIR", "/tmp/secure_smtp_uploads")))
+# Upload directory for PCAPs and reports from Settings
+UPLOAD_DIR = settings.upload_dir
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-REPORTS_DIR = Path(os.environ.get("SECURE_SMTP_REPORTS_DIR", os.environ.get("SECUREMAILSCOPE_REPORTS_DIR", "/tmp/secure_smtp_reports")))
+REPORTS_DIR = settings.reports_dir
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-
-
-@app.on_event("startup")
-def on_startup():
-    """Initialize MongoDB indexes on startup."""
-    init_db_indexes()
 
 
 # ── Analysis Pipeline ──
@@ -270,6 +273,21 @@ def _run_analysis(job_id: str, pcap_path: str) -> None:
 
             session_dict = session.model_dump()
             sessions_col.insert_one(session_dict)
+
+            # Dispatch real-time security alerts if configured thresholds are met
+            try:
+                from secure_smtp.alerts.engine import dispatch_alert
+                dispatch_alert(
+                    session_id=session.id,
+                    client_ip=reassembled.client_ip,
+                    server_ip=reassembled.server_ip,
+                    protocol=session.protocol,
+                    risk_score=risk_score.score,
+                    findings=[f.model_dump() for f in findings],
+                    pcap_source=Path(pcap_path).name,
+                )
+            except Exception as alert_err:
+                logger.debug("Alert dispatch skipped or failed: %s", alert_err)
 
             all_feature_vectors.append(fv)
             all_host_ips.append(reassembled.server_ip)
@@ -471,10 +489,40 @@ def _build_report_data(hosts: list[dict], sessions: list[dict]) -> dict:
     return report
 
 
-# ── API Endpoints ──
+# ── Endpoints ──
 
 
-@app.post("/api/analyze")
+@app.get("/api/health", tags=["System"])
+def health_check():
+    """Service health check endpoint (unauthenticated for monitoring & status probes)."""
+    mongo_status = get_mongo_auth_status()
+    is_healthy = mongo_status.get("status") == "connected"
+    return {
+        "status": "healthy" if is_healthy else "degraded",
+        "service": "secure-smtp",
+        "version": "0.1.0",
+        "auth": {
+            "api_auth": {
+                "enabled": AUTH_REQUIRED,
+                "scheme": "X-API-Key / Bearer / Query",
+            },
+            "mongodb_auth": {
+                "enabled": mongo_status.get("auth_enabled", False),
+                "required": mongo_status.get("auth_required", False),
+                "user": mongo_status.get("authenticated_user"),
+                "auth_source": mongo_status.get("auth_source"),
+            },
+        },
+        "database": {
+            "status": mongo_status.get("status"),
+            "database": mongo_status.get("database"),
+            "ping": mongo_status.get("ping", False),
+            "uri_masked": mongo_status.get("uri_masked"),
+        },
+    }
+
+
+@app.post("/api/analyze", dependencies=[Depends(verify_api_key)])
 async def analyze_pcap(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -514,7 +562,7 @@ async def analyze_pcap(
     return {"job_id": job_id, "status": "queued"}
 
 
-@app.get("/api/analyze/{job_id}/status")
+@app.get("/api/analyze/{job_id}/status", dependencies=[Depends(verify_api_key)])
 async def get_analysis_status(job_id: str):
     """Get the status of an analysis job."""
     jobs_col = get_jobs_col()
@@ -524,7 +572,7 @@ async def get_analysis_status(job_id: str):
     return serialize_doc(job)
 
 
-@app.get("/api/hosts")
+@app.get("/api/hosts", dependencies=[Depends(verify_api_key)])
 async def list_hosts():
     """List all hosts with aggregate risk scores."""
     hosts_col = get_hosts_col()
@@ -540,7 +588,7 @@ async def list_hosts():
     ]
 
 
-@app.get("/api/hosts/{host_id}")
+@app.get("/api/hosts/{host_id}", dependencies=[Depends(verify_api_key)])
 async def get_host_detail(host_id: int):
     """Get host detail with session list."""
     hosts_col = get_hosts_col()
@@ -582,7 +630,7 @@ async def get_host_detail(host_id: int):
     }
 
 
-@app.get("/api/sessions/{session_id}")
+@app.get("/api/sessions/{session_id}", dependencies=[Depends(verify_api_key)])
 async def get_session_detail(session_id: int):
     """Get full session detail from MongoDB."""
     sessions_col = get_sessions_col()
@@ -679,7 +727,7 @@ async def get_session_detail(session_id: int):
     return result
 
 
-@app.get("/api/sessions/{session_id}/explain")
+@app.get("/api/sessions/{session_id}/explain", dependencies=[Depends(verify_api_key)])
 async def get_session_explanation(session_id: int):
     """Get SHAP feature attribution for a session's risk score."""
     sessions_col = get_sessions_col()
@@ -703,7 +751,7 @@ async def get_session_explanation(session_id: int):
     }
 
 
-@app.get("/api/reports/{job_id}.json")
+@app.get("/api/reports/{job_id}.json", dependencies=[Depends(verify_api_key)])
 async def get_json_report(job_id: str):
     """Download JSON report."""
     report_path = REPORTS_DIR / job_id / "report.json"
@@ -716,7 +764,7 @@ async def get_json_report(job_id: str):
     )
 
 
-@app.get("/api/reports/{job_id}.pdf")
+@app.get("/api/reports/{job_id}.pdf", dependencies=[Depends(verify_api_key)])
 async def get_pdf_report(job_id: str):
     """Download PDF report."""
     report_path = REPORTS_DIR / job_id / "report.pdf"
@@ -729,7 +777,7 @@ async def get_pdf_report(job_id: str):
     )
 
 
-@app.get("/api/reports/{job_id}.html")
+@app.get("/api/reports/{job_id}.html", dependencies=[Depends(verify_api_key)])
 async def get_html_report(job_id: str):
     """Download HTML report."""
     report_path = REPORTS_DIR / job_id / "report.html"
@@ -740,3 +788,24 @@ async def get_html_report(job_id: str):
         media_type="text/html",
         filename=f"secure_smtp_report_{job_id}.html",
     )
+
+
+# ── Compliance Endpoints ──
+
+
+@app.get("/api/compliance/summary", tags=["Compliance"], dependencies=[Depends(verify_api_key)])
+def get_compliance_summary():
+    """Evaluate fleet-wide regulatory compliance (NIST SP 800-52, PCI-DSS, MTA-STS)."""
+    sessions_col = get_sessions_col()
+    sessions = list(sessions_col.find())
+    return evaluate_fleet_compliance(sessions)
+
+
+@app.get("/api/sessions/{session_id}/compliance", tags=["Compliance"], dependencies=[Depends(verify_api_key)])
+def get_session_compliance(session_id: int):
+    """Evaluate specific session compliance against NIST, PCI-DSS, and MTA-STS."""
+    sessions_col = get_sessions_col()
+    session = sessions_col.find_one({"id": session_id})
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    return evaluate_session_compliance(session)

@@ -1,23 +1,24 @@
 /**
  * Severity and risk tier color mapping.
+ * Maps to Precision Instrument Design System tokens (index.css).
  */
 
 export const TIER_COLORS = {
-  critical: 'var(--crimson-alert)',
-  high: 'var(--burnt-orange)',
-  medium: 'var(--ochre-warn)',
-  low: 'var(--sage-clear)',
-  clean: 'var(--sage-clear)',
-  info: 'var(--steel-info)',
+  critical: 'var(--sev-critical)',
+  high: 'var(--sev-high)',
+  medium: 'var(--sev-medium)',
+  low: 'var(--sev-low)',
+  clean: 'var(--sev-clean)',
+  info: 'var(--sev-info)',
 };
 
 export const TIER_COLORS_RAW = {
-  critical: '#C94444',
-  high: '#CC7832',
-  medium: '#B89B3C',
-  low: '#5B8A72',
-  clean: '#5B8A72',
-  info: '#6B7D93',
+  critical: '#F43F5E',
+  high: '#FB923C',
+  medium: '#FACC15',
+  low: '#38BDF8',
+  clean: '#34D399',
+  info: '#94A3B8',
 };
 
 export function getTierFromScore(score) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import Icon from './Icon';
 import { getHosts } from '../api/client';
 
 export default function Layout() {
@@ -24,21 +25,23 @@ export default function Layout() {
       <Sidebar stats={stats} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="app-main">
         <header className="app-header">
-          <div className="flex items-center gap-md">
-            <button className="mobile-menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              ☰
+          <div className="flex items-center gap-3">
+            <button
+              className="mobile-menu-toggle"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle navigation"
+            >
+              <Icon name="menu" size={16} />
             </button>
-            <div>
-              <div className="flex items-center gap-sm">
-                <span style={{ fontWeight: 700, fontSize: 'var(--font-size-base)' }}>Secure SMTP</span>
-                <span className="badge badge-info" style={{ fontSize: '0.6rem' }}>ENTERPRISE AUDIT</span>
-              </div>
+            <div className="app-header-title">
+              <span>Secure SMTP</span>
+              <span className="app-header-badge">Enterprise Audit</span>
             </div>
           </div>
           <div className="status-beacon">
             <span className="status-dot status-dot-active" />
-            <span style={{ color: 'var(--sage-clear)' }}>
-              ENGINE READY ({stats.totalHosts ?? 0} HOSTS / {stats.totalSessions ?? 0} SESSIONS)
+            <span style={{ color: 'var(--sev-clean)' }}>
+              ENGINE READY · {stats.totalHosts ?? 0} HOSTS / {stats.totalSessions ?? 0} SESSIONS
             </span>
           </div>
         </header>
@@ -46,8 +49,8 @@ export default function Layout() {
           <Outlet />
         </main>
         <footer className="app-footer">
-          <span>Secure SMTP &bull; Cryptographic Posture Intelligence</span>
-          <span className="app-footer-attribution">
+          <span>Secure SMTP · Cryptographic Posture Intelligence</span>
+          <span>
             Project belongs to{' '}
             <a
               href="https://github.com/sharmaharshit1661-web"

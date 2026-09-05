@@ -26,7 +26,14 @@ else
     echo "⚠️ No virtual environment found. Using system python3."
 fi
 
-# 2. Check/Generate Test PCAPs & Seed Demo Data
+# 2. Configure Database & API Authentication Credentials
+export SECURE_SMTP_API_KEY="${SECURE_SMTP_API_KEY:-securesmtp_live_secret_key}"
+export SECURE_SMTP_MONGO_USER="${SECURE_SMTP_MONGO_USER:-secure_admin}"
+export SECURE_SMTP_MONGO_PASSWORD="${SECURE_SMTP_MONGO_PASSWORD:-secure_smtp_live_db_key_2026}"
+export SECURE_SMTP_MONGO_AUTH_DB="${SECURE_SMTP_MONGO_AUTH_DB:-admin}"
+export SECURE_SMTP_MONGO_AUTH_MECHANISM="${SECURE_SMTP_MONGO_AUTH_MECHANISM:-SCRAM-SHA-256}"
+
+# 3. Check/Generate Test PCAPs & Seed Demo Data
 echo "✓ Checking demo database (MongoDB)..."
 PYTHONPATH=src python scripts/seed_demo_data.py
 
@@ -43,7 +50,7 @@ BACKEND_PID=$!
 # Wait for backend to be ready
 echo "✓ Waiting for backend initialization..."
 for i in {1..30}; do
-    if curl -s http://localhost:8000/api/hosts >/dev/null 2>&1; then
+    if curl -s http://localhost:8000/api/health >/dev/null 2>&1; then
         break
     fi
     sleep 0.5
@@ -62,6 +69,8 @@ echo "======================================================================"
 echo "  🌐 Web Console:          http://localhost:5173"
 echo "  📡 FastAPI Backend:      http://localhost:8000"
 echo "  📚 Swagger API Docs:     http://localhost:8000/docs"
+echo "  🔐 API Auth:             Enabled (Key: ${SECURE_SMTP_API_KEY:0:12}***)"
+echo "  🗄️ MongoDB Auth:         Active (${SECURE_SMTP_MONGO_USER}@${SECURE_SMTP_MONGO_AUTH_DB})"
 echo "  📁 Demo PCAPs Location:  $PROJECT_ROOT/tests/fixtures/pcaps/"
 echo "======================================================================"
 echo "Press Ctrl+C to stop all servers."

@@ -9,26 +9,168 @@ from __future__ import annotations
 
 import logging
 import os
+import re
+import urllib.parse
 from datetime import datetime
 from typing import Any
 
 from pymongo import ASCENDING, DESCENDING, MongoClient, ReturnDocument
 from pymongo.database import Database
+from pymongo.errors import ConnectionFailure, OperationFailure, ServerSelectionTimeoutError
+
+from secure_smtp.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-# Configurable MongoDB URI and Database Name
-MONGO_URI = os.environ.get("SECURE_SMTP_MONGO_URI", "mongodb://localhost:27017")
-DATABASE_NAME = os.environ.get("SECURE_SMTP_MONGO_DB", "secure_smtp")
+# Configurable MongoDB Settings from centralized Settings
+settings = get_settings()
+MONGO_HOST = settings.mongo_host
+MONGO_PORT = settings.mongo_port
+DATABASE_NAME = settings.mongo_db
+MONGO_USER = settings.mongo_user
+MONGO_PASSWORD = settings.mongo_password
+MONGO_AUTH_DB = settings.mongo_auth_db
+MONGO_AUTH_MECHANISM = settings.mongo_auth_mechanism
+MONGO_AUTH_REQUIRED = settings.mongo_auth_required
+EXPLICIT_MONGO_URI = settings.mongo_uri or ""
+
+
+def build_mongo_uri(
+    user: str = "",
+    password: str = "",
+    host: str = "",
+    port: int = 0,
+    db_name: str = "",
+    auth_db: str = "",
+    auth_mechanism: str = "",
+) -> str:
+    """
+    Build a well-formed MongoDB connection URI, safely percent-encoding
+    usernames and passwords that contain special characters.
+    """
+    curr = get_settings()
+    u = user if user is not None and user != "" else ""
+    p = password if password is not None and password != "" else ""
+    h = host or curr.mongo_host
+    pt = port or curr.mongo_port
+    db = db_name or curr.mongo_db
+    adb = auth_db if auth_db != "" else curr.mongo_auth_db
+    amech = auth_mechanism if auth_mechanism != "" else curr.mongo_auth_mechanism
+
+    if u and p:
+        encoded_user = urllib.parse.quote_plus(u)
+        encoded_pwd = urllib.parse.quote_plus(p)
+        query_params = []
+        if adb:
+            query_params.append(f"authSource={urllib.parse.quote_plus(adb)}")
+        if amech:
+            query_params.append(f"authMechanism={urllib.parse.quote_plus(amech)}")
+        query_str = f"?{'&'.join(query_params)}" if query_params else ""
+        return f"mongodb://{encoded_user}:{encoded_pwd}@{h}:{pt}/{db}{query_str}"
+    elif u:
+        encoded_user = urllib.parse.quote_plus(u)
+        query_params = []
+        if adb:
+            query_params.append(f"authSource={urllib.parse.quote_plus(adb)}")
+        query_str = f"?{'&'.join(query_params)}" if query_params else ""
+        return f"mongodb://{encoded_user}@{h}:{pt}/{db}{query_str}"
+    else:
+        return f"mongodb://{h}:{pt}/{db}"
+
+
+def get_active_mongo_uri() -> str:
+    """Return the active MongoDB connection URI from Settings."""
+    return get_settings().get_mongo_connection_uri()
+
+
+# Default MONGO_URI for backwards compatibility
+MONGO_URI = get_active_mongo_uri()
+
+
+def get_masked_mongo_uri(uri: str | None = None) -> str:
+    """
+    Return a redacted version of the MongoDB URI for safe logging and status reporting.
+    Replaces the password component with '******' to prevent secret leakage.
+    """
+    if uri:
+        return re.sub(r":([^/@]+)@", r":******@", uri)
+    return get_settings().get_masked_mongo_uri()
+
+
+def get_mongo_auth_status() -> dict[str, Any]:
+    """
+    Check MongoDB connectivity and authentication posture.
+    Returns connection status, latency, authentication status, and redacted URI.
+    """
+    curr = get_settings()
+    active_uri = curr.get_mongo_connection_uri()
+    is_authenticated = bool(curr.mongo_user and curr.mongo_password) or (
+        ":" in active_uri.split("@")[0] if "@" in active_uri else False
+    )
+
+    username = curr.mongo_user
+    if not username and "@" in active_uri:
+        try:
+            user_part = active_uri.split("://")[1].split("@")[0]
+            username = urllib.parse.unquote_plus(user_part.split(":")[0])
+        except Exception:
+            username = None
+
+    try:
+        client = get_mongo_client()
+        ping_res = client.admin.command("ping")
+        return {
+            "status": "connected",
+            "ping": ping_res.get("ok") == 1.0,
+            "auth_enabled": is_authenticated,
+            "auth_required": curr.mongo_auth_required,
+            "authenticated_user": username if is_authenticated else None,
+            "auth_source": curr.mongo_auth_db if is_authenticated else None,
+            "database": curr.mongo_db,
+            "uri_masked": get_masked_mongo_uri(active_uri),
+        }
+    except OperationFailure as e:
+        logger.error("MongoDB authentication failure: %s", e)
+        return {
+            "status": "auth_failure",
+            "error": str(e),
+            "auth_enabled": is_authenticated,
+            "auth_required": curr.mongo_auth_required,
+            "authenticated_user": username,
+            "database": curr.mongo_db,
+            "uri_masked": get_masked_mongo_uri(active_uri),
+        }
+    except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+        logger.error("MongoDB connection failure: %s", e)
+        return {
+            "status": "disconnected",
+            "error": str(e),
+            "auth_enabled": is_authenticated,
+            "auth_required": curr.mongo_auth_required,
+            "authenticated_user": username,
+            "database": curr.mongo_db,
+            "uri_masked": get_masked_mongo_uri(active_uri),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "auth_enabled": is_authenticated,
+            "auth_required": curr.mongo_auth_required,
+            "authenticated_user": username,
+            "database": curr.mongo_db,
+            "uri_masked": get_masked_mongo_uri(active_uri),
+        }
+
 
 _client: MongoClient | None = None
 
 
 def get_mongo_client(uri: str | None = None) -> MongoClient:
-    """Get or initialize singleton PyMongo MongoClient."""
+    """Get or initialize singleton PyMongo MongoClient with authentication support."""
     global _client
     if _client is None or uri is not None:
-        target_uri = uri or MONGO_URI
+        target_uri = uri or get_active_mongo_uri()
         _client = MongoClient(
             target_uri,
             serverSelectionTimeoutMS=5000,

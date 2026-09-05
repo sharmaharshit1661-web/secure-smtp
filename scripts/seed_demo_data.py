@@ -32,6 +32,18 @@ def seed():
     print("🛡️ Secure SMTP — Seeding MongoDB Demo Data")
     print("=" * 60)
 
+    hosts_col = get_hosts_col()
+    sessions_col = get_sessions_col()
+    h_count = hosts_col.count_documents({})
+    s_count = sessions_col.count_documents({})
+
+    force = "--force" in sys.argv
+    if not force and h_count > 0 and s_count > 0:
+        print(f"ℹ️ MongoDB already populated with {h_count} hosts and {s_count} sessions.")
+        print("   Skipping re-analysis. Run 'python scripts/seed_demo_data.py --force' to reseed.")
+        print("=" * 60)
+        return
+
     # 1. Clean wipe MongoDB
     drop_database()
     init_db_indexes()

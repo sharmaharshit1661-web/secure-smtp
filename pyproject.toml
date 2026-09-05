@@ -42,6 +42,7 @@ dependencies = [
     # Utilities
     "httpx>=0.25",
     "plotly>=5.18",
+    "pydantic-settings>=2.0.0",
 ]
 
 [project.optional-dependencies]

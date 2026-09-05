@@ -27,12 +27,32 @@ def test_cors_preflight_allowed_origin():
     assert "content-type" in response.headers.get("access-control-allow-headers", "").lower()
 
 
+def test_cors_preflight_with_api_key_header():
+    """Verify that preflight OPTIONS request with X-API-Key header is accepted with 200 OK."""
+    client = TestClient(app)
+    response = client.options(
+        "/api/hosts",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "x-api-key, content-type",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    allow_hdrs = response.headers.get("access-control-allow-headers", "").lower()
+    assert "x-api-key" in allow_hdrs or allow_hdrs == "*"
+
+
 def test_cors_actual_request_allowed_origin():
     """Verify that a GET request from trusted origin has allow-origin and expose-headers."""
     client = TestClient(app)
     response = client.get(
         "/api/hosts",
-        headers={"Origin": "http://localhost:5173"},
+        headers={
+            "Origin": "http://localhost:5173",
+            "X-API-Key": "securesmtp_live_secret_key",
+        },
     )
     assert response.status_code == 200
     assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"

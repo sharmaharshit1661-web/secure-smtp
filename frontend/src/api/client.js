@@ -2,13 +2,17 @@
  * Fetch wrapper for the Secure SMTP FastAPI backend.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+// Default to empty string so local Vite dev proxy (/api -> :8000) is leveraged seamlessly without CORS hurdles,
+// while still supporting explicit VITE_API_BASE for cross-origin deployments.
+const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+const API_KEY = import.meta.env.VITE_API_KEY || 'securesmtp_live_secret_key';
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
     ...options,
     headers: {
+      'X-API-Key': API_KEY,
       ...options.headers,
     },
   });
@@ -43,7 +47,13 @@ export async function uploadPcap(file) {
   const formData = new FormData();
   formData.append('file', file);
   const url = `${API_BASE}/api/analyze`;
-  const res = await fetch(url, { method: 'POST', body: formData });
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-API-Key': API_KEY,
+    },
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail || `Upload failed: ${res.status}`);
@@ -52,5 +62,5 @@ export async function uploadPcap(file) {
 }
 
 export function getReportUrl(jobId, format) {
-  return `${API_BASE}/api/reports/${jobId}.${format}`;
+  return `${API_BASE}/api/reports/${jobId}.${format}?api_key=${encodeURIComponent(API_KEY)}`;
 }

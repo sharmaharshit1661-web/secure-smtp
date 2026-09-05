@@ -6,8 +6,19 @@ import {
 } from 'recharts';
 import KpiCard from '../components/KpiCard';
 import HostRow from '../components/HostRow';
+import Icon from '../components/Icon';
 import { getHosts } from '../api/client';
 import { getBarColor, getTierColorRaw } from '../utils/colors';
+
+const TOOLTIP_STYLE = {
+  backgroundColor: 'var(--bg-elevated)',
+  border: '1px solid var(--border-strong)',
+  borderRadius: '10px',
+  color: 'var(--text-primary)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: '12px',
+  boxShadow: 'var(--shadow-md)',
+};
 
 export default function FleetOverview() {
   const navigate = useNavigate();
@@ -17,12 +28,8 @@ export default function FleetOverview() {
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState('ALL');
 
-  useEffect(() => {
-    fetchHosts();
-  }, []);
-
-  const fetchHosts = async () => {
-    setLoading(true);
+  const fetchHosts = async (isManual = false) => {
+    if (isManual) setLoading(true);
     setError(null);
     try {
       const data = await getHosts();
@@ -35,6 +42,10 @@ export default function FleetOverview() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHosts();
+  }, []);
 
   const totalHosts = hosts.length;
   const totalSessions = hosts.reduce((sum, h) => sum + (h.session_count || 0), 0);
@@ -72,114 +83,67 @@ export default function FleetOverview() {
   });
 
   return (
-    <div className="flex flex-col gap-xl">
-      {/* Top Title Banner */}
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col gap-5">
+      <div className="page-header animate-in">
         <div>
-          <h1 className="section-header" style={{ marginBottom: 'var(--space-xs)', fontSize: 'var(--font-size-2xl)' }}>
-            <span>🌐</span> Fleet Posture Overview
+          <h1 className="page-title">
+            <span className="page-title-icon"><Icon name="globe" size={20} /></span>
+            Fleet Posture Overview
           </h1>
-          <p className="text-secondary text-sm">
-            Passive Cryptographic Posture Intelligence & Explainable AI Risk Attribution
+          <p className="page-subtitle">
+            Passive cryptographic posture intelligence &amp; explainable AI risk attribution
+            across every monitored mail host.
           </p>
         </div>
         <button className="btn btn-primary" onClick={() => navigate('/ingest')}>
-          <span>⚡</span> Live PCAP Ingest
+          <Icon name="bolt" size={14} /> Live PCAP Ingest
         </button>
       </div>
 
-      {/* KPI Metric Cards */}
       <div className="grid grid-5">
-        <KpiCard
-          label="Audited Hosts"
-          value={loading ? '...' : totalHosts}
-          sub="Across Monitored Subnets"
-          icon="🌐"
-          delay={0}
-        />
-        <KpiCard
-          label="Evaluated Sessions"
-          value={loading ? '...' : totalSessions}
-          sub="SMTP / IMAP / POP3"
-          icon="🔐"
-          delay={1}
-        />
+        <KpiCard label="Audited Hosts" value={loading ? '…' : totalHosts} sub="Across monitored subnets" icon="globe" delay={0} />
+        <KpiCard label="Evaluated Sessions" value={loading ? '…' : totalSessions} sub="SMTP / IMAP / POP3" icon="lock" delay={1} />
         <KpiCard
           label="Fleet Risk Index"
-          value={loading ? '...' : `${avgRisk.toFixed(1)}`}
-          sub="Weighted Posture Mean"
-          icon="📊"
-          accentColor={avgRisk >= 50 ? 'var(--crimson-alert)' : avgRisk >= 25 ? 'var(--ochre-warn)' : 'var(--sage-clear)'}
+          value={loading ? '…' : Number(avgRisk.toFixed(1))}
+          sub="Weighted posture mean"
+          icon="chart"
+          accentColor={avgRisk >= 50 ? 'var(--sev-critical)' : avgRisk >= 25 ? 'var(--sev-medium)' : 'var(--sev-clean)'}
           delay={2}
         />
-        <KpiCard
-          label="Critical Threats"
-          value={loading ? '...' : criticalHosts}
-          sub="Score ≥ 75 (Urgent Action)"
-          icon="⚠️"
-          accentColor="var(--crimson-alert)"
-          delay={3}
-        />
-        <KpiCard
-          label="Pristine / Good"
-          value={loading ? '...' : cleanHosts}
-          sub="TLS 1.3 / AEAD Compliant"
-          icon="✅"
-          accentColor="var(--sage-clear)"
-          delay={4}
-        />
+        <KpiCard label="Critical Threats" value={loading ? '…' : criticalHosts} sub="Score ≥ 75 — urgent action" icon="alert" accentColor="var(--sev-critical)" delay={3} />
+        <KpiCard label="Pristine / Good" value={loading ? '…' : cleanHosts} sub="TLS 1.3 / AEAD compliant" icon="check" accentColor="var(--sev-clean)" delay={4} />
       </div>
 
-      {/* Error State */}
       {error && (
-        <div className="card" style={{ borderColor: 'var(--crimson-alert)', background: 'var(--crimson-glow)' }}>
-          <div className="flex items-center gap-sm">
-            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-            <div>
-              <div className="font-bold text-crimson">Failed to load host telemetry</div>
-              <div className="text-secondary text-sm">{error} — Ensure FastAPI backend is running on port 8000.</div>
-            </div>
-            <button className="btn" style={{ marginLeft: 'auto' }} onClick={fetchHosts}>Retry</button>
+        <div className="alert alert-critical animate-in">
+          <span className="alert-icon"><Icon name="alert" size={18} /></span>
+          <div className="flex-1">
+            <div className="font-semibold text-critical">Failed to load host telemetry</div>
+            <div className="text-secondary text-sm">{error} — ensure the FastAPI backend is running on port 8000.</div>
           </div>
+          <button className="btn" onClick={() => fetchHosts(true)}>Retry</button>
         </div>
       )}
 
-      {/* Charts Row */}
       {!loading && hosts.length > 0 && (
         <div className="grid grid-3-2">
-          {/* Host Risk Bar Chart */}
-          <div className="card">
-            <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-              <span>📊</span> Host Risk Distribution
+          <div className="card card-hover animate-in animate-in-2">
+            <div className="section-header" style={{ marginBottom: 'var(--space-4)' }}>
+              <Icon name="chart" size={16} /> Host Risk Distribution
             </div>
             <div style={{ height: 260, width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barChartData} margin={{ top: 15, right: 10, left: -15, bottom: 25 }}>
-                  <XAxis
-                    dataKey="ip"
-                    stroke="var(--text-muted)"
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-                    angle={-20}
-                    textAnchor="end"
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    stroke="var(--text-muted)"
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-                  />
+                  <XAxis dataKey="ip" stroke="var(--text-muted)" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontFamily: 'var(--font-mono)' }} angle={-20} textAnchor="end" />
+                  <YAxis domain={[0, 100]} stroke="var(--text-muted)" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontFamily: 'var(--font-mono)' }} />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-elevated)',
-                      borderColor: 'var(--border-subtle)',
-                      borderRadius: 'var(--radius-sm)',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '12px',
-                    }}
+                    contentStyle={TOOLTIP_STYLE}
+                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
                     formatter={(val) => [`${val} / 100`, 'Risk Score']}
                     labelFormatter={(label) => `Host: ${label}`}
                   />
-                  <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="score" radius={[5, 5, 0, 0]} maxBarSize={38}>
                     {barChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getBarColor(entry.score)} />
                     ))}
@@ -189,10 +153,9 @@ export default function FleetOverview() {
             </div>
           </div>
 
-          {/* Donut Tier Breakdown */}
-          <div className="card">
-            <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-              <span>🛡️</span> Posture Risk Tier Breakdown
+          <div className="card card-hover animate-in animate-in-3">
+            <div className="section-header" style={{ marginBottom: 'var(--space-4)' }}>
+              <Icon name="shield" size={16} /> Posture Risk Tier Breakdown
             </div>
             <div style={{ height: 260, width: '100%' }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -201,8 +164,8 @@ export default function FleetOverview() {
                     data={pieChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
+                    innerRadius={58}
+                    outerRadius={88}
                     paddingAngle={4}
                     dataKey="value"
                     label={({ name, value }) => `${name}: ${value}`}
@@ -212,16 +175,7 @@ export default function FleetOverview() {
                       <Cell key={`pie-cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--bg-elevated)',
-                      borderColor: 'var(--border-subtle)',
-                      borderRadius: 'var(--radius-sm)',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '12px',
-                    }}
-                  />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -229,17 +183,16 @@ export default function FleetOverview() {
         </div>
       )}
 
-      {/* Host Posture Inventory Section */}
-      <div className="card">
-        <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-lg)' }}>
-          <div className="section-header" style={{ marginBottom: 0 }}>
-            <span>🔍</span> Host Posture Inventory ({filteredHosts.length})
+      <div className="card animate-in animate-in-4">
+        <div className="flex justify-between items-center flex-wrap gap-3" style={{ marginBottom: 'var(--space-4)' }}>
+          <div className="section-header">
+            <Icon name="search" size={16} /> Host Posture Inventory ({filteredHosts.length})
           </div>
-          <div className="flex gap-md" style={{ width: '45%' }}>
+          <div className="flex gap-2" style={{ width: 'min(45%, 460px)' }}>
             <input
               type="text"
               className="input"
-              placeholder="Search IP or Subnet (e.g. 10.0.0.1)..."
+              placeholder="Search IP or subnet (e.g. 10.0.0.1)…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -258,33 +211,34 @@ export default function FleetOverview() {
           </div>
         </div>
 
-        {/* Host Rows or Empty States */}
         {loading ? (
-          <div className="flex flex-col gap-sm">
+          <div className="flex flex-col gap-2">
             {[1, 2, 3].map((i) => (
               <div key={i} className="skeleton" style={{ height: '64px', width: '100%' }} />
             ))}
           </div>
         ) : filteredHosts.length > 0 ? (
-          <div className="flex flex-col gap-xs">
-            {filteredHosts.map((host) => (
-              <HostRow key={host.host_id} host={host} />
+          <div className="flex flex-col gap-1">
+            {filteredHosts.map((host, i) => (
+              <div key={host.host_id} className="animate-in" style={{ animationDelay: `${Math.min(i * 40, 320)}ms` }}>
+                <HostRow host={host} />
+              </div>
             ))}
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-state-icon">📡</div>
-            <div className="font-bold text-lg text-primary" style={{ marginBottom: 'var(--space-xs)' }}>
+            <div className="empty-state-icon"><Icon name="radar" size={24} /></div>
+            <div className="font-bold text-md text-primary" style={{ marginBottom: 'var(--space-1)' }}>
               No Monitored Hosts Found
             </div>
-            <p className="text-secondary text-sm" style={{ maxWidth: '420px', margin: '0 auto var(--space-lg)' }}>
+            <p className="text-secondary text-sm" style={{ maxWidth: '420px', margin: '0 auto var(--space-4)' }}>
               {search || tierFilter !== 'ALL'
                 ? 'No hosts match your active search or filter criteria.'
                 : 'Your database is currently empty. Run an ingestion or replay an attack scenario to begin forensics.'}
             </p>
             {!search && tierFilter === 'ALL' && (
               <button className="btn btn-primary" onClick={() => navigate('/ingest')}>
-                <span>⚡</span> Ingest PCAP Trace
+                <Icon name="bolt" size={14} /> Ingest PCAP Trace
               </button>
             )}
           </div>
