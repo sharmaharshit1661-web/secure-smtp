@@ -55,12 +55,34 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# ── CORS Configuration ──
+
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+_cors_env = os.environ.get("SECURE_SMTP_CORS_ORIGINS", os.environ.get("CORS_ORIGINS", "")).strip()
+if _cors_env:
+    allowed_origins = [orig.strip() for orig in _cors_env.split(",") if orig.strip()]
+else:
+    allowed_origins = DEFAULT_CORS_ORIGINS
+
+# If wildcard is explicitly used, credentials must be False per W3C CORS specification
+allow_credentials = False if "*" in allowed_origins else True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=allow_credentials,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+    expose_headers=["Content-Disposition", "Content-Length", "X-Total-Count"],
+    max_age=600,
 )
 
 # Upload directory for PCAPs
